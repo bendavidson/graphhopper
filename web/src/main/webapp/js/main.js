@@ -29,7 +29,7 @@ var defaultTranslationMap = null;
 var enTranslationMap = null;
 var routeSegmentPopup = null;
 var elevationControl = null;
-var activeLayer = '';
+var activeLayer = 'LocalTiles';
 var i18nIsInitialized;
 
 var iconFrom = L.icon({
@@ -383,6 +383,9 @@ function initMap(selectLayer) {
         maxZoom: 18
     });
 
+	var localTiles = L.tileLayer('http://192.168.202.180/osm/{z}/{x}/{y}.png', {
+		attribution: osmAttr
+		});
     var baseMaps = {
         "Lyrk": lyrk,
         "Omniscale": omniscale,
@@ -396,6 +399,7 @@ function initMap(selectLayer) {
         "WanderReitKarte": wrk,
         "OpenStreetMap": osm,
         "OpenStreetMap.de": osmde,
+		"LocalTiles": localTiles
         "Sorbian Language": sorbianLang
     };
 
