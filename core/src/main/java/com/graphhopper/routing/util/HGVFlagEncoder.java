@@ -86,17 +86,17 @@ public class HGVFlagEncoder extends CarFlagEncoder
         maxPossibleSpeed = 90;
 
         // autobahn
-        defaultSpeedMap.put("motorway", 72);
-        defaultSpeedMap.put("motorway_link", 30);
-        defaultSpeedMap.put("motorroad", 56);
+        defaultSpeedMap.put("motorway", 68);
+        defaultSpeedMap.put("motorway_link", 20);
+        defaultSpeedMap.put("motorroad", 50);
         // bundesstraße
-        defaultSpeedMap.put("trunk", 32);
-        defaultSpeedMap.put("trunk_link", 20);
+        defaultSpeedMap.put("trunk", 30);
+        defaultSpeedMap.put("trunk_link", 15);
         // linking bigger town
         defaultSpeedMap.put("primary", 28);
-        defaultSpeedMap.put("primary_link", 16);
+        defaultSpeedMap.put("primary_link", 15);
         // linking towns + villages
-        defaultSpeedMap.put("secondary", 27);
+        defaultSpeedMap.put("secondary", 25);
         defaultSpeedMap.put("secondary_link", 12);
         // streets without middle line separation
         defaultSpeedMap.put("tertiary", 19);
