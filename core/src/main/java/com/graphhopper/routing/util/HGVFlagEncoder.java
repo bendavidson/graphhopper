@@ -116,7 +116,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         // first two bits are reserved for route handling in superclass
         shift = super.defineWayBits(index, shift);
         reverseSpeedEncoder = new EncodedDoubleValue("Reverse Speed", shift, speedBits, speedFactor, 
-                                                     defaultSpeedMap.get("secondary"), 90);
+                                                     defaultSpeedMap.get("secondary"), 100);
         shift += reverseSpeedEncoder.getBits();
 
         preferWayEncoder = new EncodedValue("PreferWay", shift, 3, 1, 3, 7);
