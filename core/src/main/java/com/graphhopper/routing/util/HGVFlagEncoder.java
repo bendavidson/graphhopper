@@ -33,7 +33,7 @@ import java.util.HashSet;
 public class HGVFlagEncoder extends CarFlagEncoder
 {
     private EncodedDoubleValue reverseSpeedEncoder;
-    private EncodedValue preferWayEncoder;
+    private EncodedValue priorityWayEncoder;
     private final HashSet<String> avoidAllCostsSet = new HashSet<String>();
 	private final HashSet<String> reachdestinationSet = new HashSet<String>();
 	private final HashSet<String> avoidIfPossibleSet = new HashSet<String>();
@@ -50,6 +50,11 @@ public class HGVFlagEncoder extends CarFlagEncoder
 			);
 		this.properties = properties;
         this.setBlockFords(properties.getBool("blockFords", true));
+    }
+
+    public HGVFlagEncoder( String propertiesStr )
+    {
+        this(new PMap(propertiesStr));
     }
 
     public HGVFlagEncoder( int speedBits, double speedFactor, int maxTurnCosts )
@@ -70,41 +75,41 @@ public class HGVFlagEncoder extends CarFlagEncoder
 
         veryniceSet.add("motorway");
         veryniceSet.add("motorroad");
-        preferSet.add("trunk");
-		avoidIfPossibleSet.add("primary");
+        veryniceSet.add("trunk");
+		preferSet.add("primary");
 		avoidIfPossibleSet.add("secondary");
         reachdestinationSet.add("tertiary");
         reachdestinationSet.add("residential");
         avoidAllCostsSet.add("unclassified");
         avoidAllCostsSet.add("living_street");
         
-        //maxPossibleSpeed = 100;
+        maxPossibleSpeed = 90;
 
         // autobahn
-        defaultSpeedMap.put("motorway", 75);
-        defaultSpeedMap.put("motorway_link", 58);
-        defaultSpeedMap.put("motorroad", 58);
+        defaultSpeedMap.put("motorway", 72);
+        defaultSpeedMap.put("motorway_link", 40);
+        defaultSpeedMap.put("motorroad", 56);
         // bundesstraße
-        defaultSpeedMap.put("trunk", 36);
-        defaultSpeedMap.put("trunk_link", 29);
+        defaultSpeedMap.put("trunk", 32);
+        defaultSpeedMap.put("trunk_link", 24);
         // linking bigger town
-        defaultSpeedMap.put("primary", 32);
-        defaultSpeedMap.put("primary_link", 22);
+        defaultSpeedMap.put("primary", 28);
+        defaultSpeedMap.put("primary_link", 16);
         // linking towns + villages
-        defaultSpeedMap.put("secondary", 29);
-        defaultSpeedMap.put("secondary_link", 14);
+        defaultSpeedMap.put("secondary", 27);
+        defaultSpeedMap.put("secondary_link", 12);
         // streets without middle line separation
-        defaultSpeedMap.put("tertiary", 22);
-        defaultSpeedMap.put("tertiary_link", 7);
-        defaultSpeedMap.put("unclassified", 14);
-        defaultSpeedMap.put("residential", 22);
+        defaultSpeedMap.put("tertiary", 19);
+        defaultSpeedMap.put("tertiary_link", 6);
+        defaultSpeedMap.put("unclassified", 12);
+        defaultSpeedMap.put("residential", 19);
         // spielstraße
-        defaultSpeedMap.put("living_street", 4);
-        defaultSpeedMap.put("service", 7);
+        defaultSpeedMap.put("living_street", 3);
+        defaultSpeedMap.put("service", 6);
         // unknown road
-        defaultSpeedMap.put("road", 7);
+        defaultSpeedMap.put("road", 6);
         // forestry stuff
-        defaultSpeedMap.put("track", 4);
+        defaultSpeedMap.put("track", 3);
     }
 
     /**
@@ -115,11 +120,11 @@ public class HGVFlagEncoder extends CarFlagEncoder
     {
         // first two bits are reserved for route handling in superclass
         shift = super.defineWayBits(index, shift);
-        reverseSpeedEncoder = new EncodedDoubleValue("Reverse Speed", shift, speedBits, speedFactor, 
-                                                     defaultSpeedMap.get("secondary"), 150);
+        reverseSpeedEncoder = new EncodedDoubleValue("Reverse Speed", shift, speedBits, speedFactor,
+                defaultSpeedMap.get("secondary"), maxPossibleSpeed);
         shift += reverseSpeedEncoder.getBits();
 
-        preferWayEncoder = new EncodedValue("PreferWay", shift, 3, 1, 3, 7);
+        priorityWayEncoder = new EncodedValue("PreferWay", shift, 3, 1, 3, 7);
         shift += reverseSpeedEncoder.getBits();
 
         return shift;
@@ -238,10 +243,22 @@ public class HGVFlagEncoder extends CarFlagEncoder
         if (speed < 0)
             throw new IllegalArgumentException("Speed cannot be negative: " + speed + ", flags:" + BitUtil.LITTLE.toBitString(flags));
 
+        if (speed < speedEncoder.factor / 2)
+            return setLowSpeed(flags, speed, true);
+
         if (speed > getMaxSpeed())
             speed = getMaxSpeed();
 
         return reverseSpeedEncoder.setDoubleValue(flags, speed);
+    }
+
+    @Override
+    protected long setLowSpeed( long flags, double speed, boolean reverse )
+    {
+        if (reverse)
+            return setBool(reverseSpeedEncoder.setDoubleValue(flags, 0), K_BACKWARD, false);
+
+        return setBool(speedEncoder.setDoubleValue(flags, 0), K_FORWARD, false);
     }
 
     @Override
@@ -282,11 +299,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         switch (key)
         {
             case PriorityWeighting.KEY:
-                double prio = preferWayEncoder.getValue(flags);
-                if (prio == 0)
-                    return (double) UNCHANGED.getValue() / BEST.getValue();
-
-                return prio / BEST.getValue();
+                return (double) priorityWayEncoder.getValue(flags) / BEST.getValue();
             default:
                 return super.getDouble(flags, key);
         }
@@ -298,7 +311,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         switch (key)
         {
             case PriorityWeighting.KEY:
-                return preferWayEncoder.getValue(flags);
+                return priorityWayEncoder.getValue(flags);
             default:
                 return super.getLong(flags, key);
         }
@@ -310,7 +323,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         switch (key)
         {
             case PriorityWeighting.KEY:
-                return preferWayEncoder.setValue(flags, value);
+                return priorityWayEncoder.setValue(flags, value);
             default:
                 return super.setLong(flags, key, value);
         }
