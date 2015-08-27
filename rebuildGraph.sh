@@ -1,5 +1,5 @@
 #!/bin/bash
-rm -rf great-britain-latest.osm-gh/
+rm -rf europe_great-britain-gh/
 ./graphhopper.sh clean
-./graphhopper.sh import great-britain-latest.osm.pbf
-./graphhopper.sh web great-britain-latest.osm.pbf
+./graphhopper.sh import europe_great-britain.pbf
+./graphhopper.sh web europe_great-britain.pbf
