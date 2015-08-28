@@ -45,7 +45,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
     {
         this(
 				(int) properties.getLong("speedBits", 5),
-                properties.getDouble("speedFactor", 1),
+                properties.getDouble("speedFactor", 5),
                 properties.getBool("turnCosts", false) ? 3 : 0
 			);
 		this.properties = properties;
@@ -76,7 +76,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         veryniceSet.add("motorway");
         veryniceSet.add("motorroad");
         veryniceSet.add("trunk");
-		preferSet.add("primary");
+		//preferSet.add("primary");
 		avoidIfPossibleSet.add("secondary");
         reachdestinationSet.add("tertiary");
         reachdestinationSet.add("residential");
