@@ -75,8 +75,8 @@ public class HGVFlagEncoder extends CarFlagEncoder
 
         veryniceSet.add("motorway");
         veryniceSet.add("motorroad");
-        preferSet.add("trunk");
-		//preferSet.add("primary");
+        veryniceSet.add("trunk");
+		avoidIfPossibleSet.add("primary");
 		avoidIfPossibleSet.add("secondary");
         reachdestinationSet.add("tertiary");
         reachdestinationSet.add("residential");
