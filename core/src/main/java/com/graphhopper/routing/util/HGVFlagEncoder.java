@@ -45,7 +45,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
     {
         this(
 				(int) properties.getLong("speedBits", 5),
-                properties.getDouble("speedFactor", 5),
+                properties.getDouble("speedFactor", 1),
                 properties.getBool("turnCosts", false) ? 3 : 0
 			);
 		this.properties = properties;
@@ -86,30 +86,30 @@ public class HGVFlagEncoder extends CarFlagEncoder
         maxPossibleSpeed = 90;
 
         // autobahn
-        defaultSpeedMap.put("motorway", 64);
-        defaultSpeedMap.put("motorway_link", 19);
-        defaultSpeedMap.put("motorroad", 48);
+        defaultSpeedMap.put("motorway", 80);
+        defaultSpeedMap.put("motorway_link", 32);
+        defaultSpeedMap.put("motorroad", 75);
         // bundesstraße
-        defaultSpeedMap.put("trunk", 33);
-        defaultSpeedMap.put("trunk_link", 19);
+        defaultSpeedMap.put("trunk", 72);
+        defaultSpeedMap.put("trunk_link", 32);
         // linking bigger town
-        defaultSpeedMap.put("primary", 28);
-        defaultSpeedMap.put("primary_link", 16);
+        defaultSpeedMap.put("primary", 64);
+        defaultSpeedMap.put("primary_link", 24);
         // linking towns + villages
-        defaultSpeedMap.put("secondary", 25);
-        defaultSpeedMap.put("secondary_link", 12);
+        defaultSpeedMap.put("secondary", 40);
+        defaultSpeedMap.put("secondary_link", 19);
         // streets without middle line separation
-        defaultSpeedMap.put("tertiary", 19);
-        defaultSpeedMap.put("tertiary_link", 6);
-        defaultSpeedMap.put("unclassified", 12);
-        defaultSpeedMap.put("residential", 19);
+        defaultSpeedMap.put("tertiary", 24);
+        defaultSpeedMap.put("tertiary_link", 16);
+        defaultSpeedMap.put("unclassified", 19);
+        defaultSpeedMap.put("residential", 24);
         // spielstraße
-        defaultSpeedMap.put("living_street", 3);
-        defaultSpeedMap.put("service", 6);
+        defaultSpeedMap.put("living_street", 24);
+        defaultSpeedMap.put("service", 16);
         // unknown road
-        defaultSpeedMap.put("road", 6);
+        defaultSpeedMap.put("road", 16);
         // forestry stuff
-        defaultSpeedMap.put("track", 3);
+        defaultSpeedMap.put("track", 8);
     }
 
     /**
@@ -190,7 +190,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
 
             // get assumed speed from highway type
             double speed = getSpeed(way);
-            speed = applyMaxSpeed(way, speed, true);
+            speed = applyMaxSpeed(way, speed, false);
 
             double maxHGVSpeed = parseSpeed(way.getTag("maxspeed:hgv"));
             if (maxHGVSpeed > 0 && maxHGVSpeed < speed)
