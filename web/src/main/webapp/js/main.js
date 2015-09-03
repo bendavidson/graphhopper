@@ -29,7 +29,7 @@ var defaultTranslationMap = null;
 var enTranslationMap = null;
 var routeSegmentPopup = null;
 var elevationControl = null;
-var activeLayer = '';
+var activeLayer = 'local';
 var i18nIsInitialized;
 
 var iconFrom = L.icon({
@@ -376,7 +376,7 @@ function initMap(selectLayer) {
         subdomains: ['a', 'b', 'c']
     });
 
-    var local = L.tileLayer('http://localhost/osm_tiles/{z}/{x}/{y}.png', {
+    var local = L.tileLayer('http://192.168.101.30/osm_tiles/{z}/{x}/{y}.png', {
         attribution: osmAttr
     });
 
