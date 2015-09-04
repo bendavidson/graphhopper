@@ -202,9 +202,9 @@ public class HGVFlagEncoder extends CarFlagEncoder
             if (speed > 30 && way.hasTag("surface", badSurfaceSpeedMap))
                 speed = 30;
 				
-			// reduce speed by half if in London
+			// reduce speed by 30% if in London
 			if (way.hasTag("operator","Transport for London"))
-				speed = speed * 0.5;
+				speed = speed * 0.7;
 
             boolean isRoundabout = way.hasTag("junction", "roundabout");
             if (isRoundabout)
