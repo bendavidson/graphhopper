@@ -201,6 +201,10 @@ public class HGVFlagEncoder extends CarFlagEncoder
             // limit speed to max 30 km/h if bad surface
             if (speed > 30 && way.hasTag("surface", badSurfaceSpeedMap))
                 speed = 30;
+				
+			// reduce speed by half if in London
+			if (way.hasTag("operator","Transport for London"))
+				speed = speed * 0.5;
 
             boolean isRoundabout = way.hasTag("junction", "roundabout");
             if (isRoundabout)
