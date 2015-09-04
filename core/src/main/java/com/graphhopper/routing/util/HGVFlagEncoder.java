@@ -87,10 +87,10 @@ public class HGVFlagEncoder extends CarFlagEncoder
 
         // autobahn
         defaultSpeedMap.put("motorway", 75);
-        defaultSpeedMap.put("motorway_link", 32);
+        defaultSpeedMap.put("motorway_link", 25);
         defaultSpeedMap.put("motorroad", 75);
         // bundesstraße
-        defaultSpeedMap.put("trunk", 64);
+        defaultSpeedMap.put("trunk", 70);
         defaultSpeedMap.put("trunk_link", 32);
         // linking bigger town
         defaultSpeedMap.put("primary", 55);
