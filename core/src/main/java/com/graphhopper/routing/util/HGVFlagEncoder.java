@@ -73,7 +73,7 @@ public class HGVFlagEncoder extends CarFlagEncoder
         trackTypeSpeedMap.put("grade4", 5); // ... some hard or compressed materials
         trackTypeSpeedMap.put("grade5", 5); // ... no hard materials. soil/sand/grass
 
-        preferSet.add("motorway");
+        veryniceSet.add("motorway");
         preferSet.add("motorroad");
         preferSet.add("trunk");
 		avoidIfPossibleSet.add("primary");
