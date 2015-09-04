@@ -82,6 +82,8 @@ public class HGVFlagEncoder extends CarFlagEncoder
         reachdestinationSet.add("residential");
         avoidAllCostsSet.add("unclassified");
         avoidAllCostsSet.add("living_street");
+		
+		reachdestinationSet.add("Transport for London");
         
         maxPossibleSpeed = 90;
 
@@ -332,10 +334,11 @@ public class HGVFlagEncoder extends CarFlagEncoder
     private int calcPriority( OSMWay way, long relationFlags )
     {
         String highway = way.getTag("highway", "");
+		String operator = way.getTag("operator","");
         if (avoidAllCostsSet.contains(highway))
         {
             return PriorityCode.AVOID_AT_ALL_COSTS.getValue();
-        } else if (reachdestinationSet.contains(highway))
+        } else if (reachdestinationSet.contains(highway)||reachdestinationSet.contains(operator))
         {
             return PriorityCode.REACH_DEST.getValue();
         } else if (avoidIfPossibleSet.contains(highway))
