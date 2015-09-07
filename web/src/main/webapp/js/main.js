@@ -376,7 +376,7 @@ function initMap(selectLayer) {
         subdomains: ['a', 'b', 'c']
     });
 
-    var local = L.tileLayer('http://192.168.101.30/osm_tiles/{z}/{x}/{y}.png', {
+    var local = L.tileLayer('http://delrepmaps/osm_tiles/{z}/{x}/{y}.png', {
         attribution: osmAttr
     });
 
@@ -406,7 +406,7 @@ function initMap(selectLayer) {
 
     var defaultLayer = baseMaps[selectLayer];
     if (!defaultLayer)
-        defaultLayer = omniscale;
+        defaultLayer = local;
 
     // default
     map = L.map('map', {
