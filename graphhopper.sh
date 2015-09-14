@@ -14,7 +14,7 @@ if [ "$bit64" != "" ]; then
 fi
 echo "## using java $vers from $JAVA_HOME"
 
-CONFIG=config.properties
+CONFIG="$GH_HOME/config.properties"
 if [ ! -f "config.properties" ]; then
   cp config-example.properties $CONFIG
 fi
@@ -97,7 +97,7 @@ function ensureMaven {
 }
 
 function packageCoreJar {
-  if [ ! -d "./target" ]; then
+  if [ ! -d "$GH_HOME/target" ]; then
     echo "## building parent"
     "$MAVEN_HOME/bin/mvn" --non-recursive install > /tmp/graphhopper-compile.log
      returncode=$?
@@ -133,7 +133,7 @@ function prepareEclipse {
 
 ## now handle actions which do not take an OSM file
 if [ "$ACTION" = "clean" ]; then
- rm -rf ./*/target
+ rm -rf "GH_HOME/*/target"
  exit
 
 elif [ "$ACTION" = "eclipse" ]; then
@@ -145,7 +145,7 @@ elif [ "$ACTION" = "build" ]; then
  exit  
  
 elif [ "$ACTION" = "extract" ]; then
- echo use "./graphhopper.sh extract \"left,bottom,right,top\""
+ echo use "GH_HOME/graphhopper.sh extract \"left,bottom,right,top\""
  URL="http://overpass-api.de/api/map?bbox=$2"
  #echo "$URL"
  wget -O extract.osm "$URL"
@@ -188,8 +188,8 @@ else
 fi
 
 GRAPH=$NAME-gh
-VERSION=$(grep  "<name>" -A 1 pom.xml | grep version | cut -d'>' -f2 | cut -d'<' -f1)
-JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar
+VERSION=$(grep  "<name>" -A 1 "$GH_HOME/pom.xml" | grep version | cut -d'>' -f2 | cut -d'<' -f1)
+JAR="$GH_HOME/tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar"
 
 LINK=$(echo $NAME | tr '_' '/')
 if [ "$FILE" == "-" ]; then
@@ -232,7 +232,7 @@ if [ "$ACTION" = "ui" ] || [ "$ACTION" = "web" ]; then
     fi
   fi
 
-  RC_BASE=./web/src/main/webapp
+  RC_BASE="$GH_HOME/web/src/main/webapp"
 
   if [ "$GH_FOREGROUND" = "" ]; then
     exec "$JAVA" $JAVA_OPTS -jar "$WEB_JAR" jetty.resourcebase=$RC_BASE \
