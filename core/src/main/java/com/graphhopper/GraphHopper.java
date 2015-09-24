@@ -31,6 +31,7 @@ import com.graphhopper.storage.index.LocationIndexTree;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.*;
 import com.graphhopper.util.shapes.GHPoint;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Easy to use access point to configure import and (offline) routing.
@@ -63,6 +66,7 @@ public class GraphHopper implements GraphHopperAPI
     private final String fileLockName = "gh.lock";
     private boolean allowWrites = true;
     boolean enableInstructions = true;
+    private String preferredLanguage = "";
     private boolean fullyLoaded = false;
     // for routing
     private double defaultWeightLimit = Double.MAX_VALUE;
@@ -80,6 +84,8 @@ public class GraphHopper implements GraphHopperAPI
     private boolean doPrepare = true;
     private boolean chEnabled = true;
     private String chWeightingStr = "fastest";
+    private int chPrepareThreads = -1;
+    private ExecutorService chPreparePool;
     private int preparePeriodicUpdates = -1;
     private int prepareLazyUpdates = -1;
     private int prepareNeighborUpdates = -1;
@@ -96,6 +102,7 @@ public class GraphHopper implements GraphHopperAPI
 
     public GraphHopper()
     {
+        setCHPrepareThreads(1);
     }
 
     /**
@@ -305,6 +312,22 @@ public class GraphHopper implements GraphHopperAPI
     }
 
     /**
+     * This method changes the number of threads used for preparation on import. Default is 1. Make
+     * sure that you have enough memory to increase this number!
+     */
+    public GraphHopper setCHPrepareThreads( int prepareThreads )
+    {
+        this.chPrepareThreads = prepareThreads;
+        this.chPreparePool = java.util.concurrent.Executors.newFixedThreadPool(chPrepareThreads);
+        return this;
+    }
+
+    public int getCHPrepareThreads()
+    {
+        return chPrepareThreads;
+    }
+
+    /**
      * Disables the "CH-preparation" preparation only. Use only if you know what you do. To disable
      * the full usage of CH use setCHEnable(false) instead.
      */
@@ -372,6 +395,30 @@ public class GraphHopper implements GraphHopperAPI
         ensureNotLoaded();
         enableInstructions = b;
         return this;
+    }
+
+    /**
+     * This method specifies the preferred language for way names during import.
+     * <p>
+     * Language code as defined in ISO 639-1 or ISO 639-2.
+     * <ul>
+     * <li>If no preferred language is specified, only the default language with no tag will be imported.</li>
+     * <li>If a language is specified, it will be imported if its tag is found, otherwise fall back to default language.</li>
+     * </ul>
+     */
+    public GraphHopper setPreferredLanguage( String preferredLanguage )
+    {
+    	ensureNotLoaded();
+    	if (preferredLanguage == null)
+    		throw new IllegalArgumentException("preferred language cannot be null");
+
+    	this.preferredLanguage = preferredLanguage;
+    	return this;
+    }
+
+    public String getPreferredLanguage()
+    {
+    	return preferredLanguage;
     }
 
     /**
@@ -565,6 +612,7 @@ public class GraphHopper implements GraphHopperAPI
 
         // prepare CH        
         doPrepare = args.getBool("prepare.doPrepare", doPrepare);
+        setCHPrepareThreads(args.getInt("prepare.threads", chPrepareThreads));
 
         String tmpCHWeighting = args.get("prepare.chWeighting", "fastest");
         chEnabled = "fastest".equals(tmpCHWeighting) || "shortest".equals(tmpCHWeighting);
@@ -585,6 +633,7 @@ public class GraphHopper implements GraphHopperAPI
 
         workerThreads = args.getInt("osmreader.workerThreads", workerThreads);
         enableInstructions = args.getBool("osmreader.instructions", enableInstructions);
+        preferredLanguage = args.get("osmreader.preferred-language", preferredLanguage);
 
         // index
         preciseIndexResolution = args.getInt("index.highResolution", preciseIndexResolution);
@@ -667,6 +716,7 @@ public class GraphHopper implements GraphHopperAPI
                     + " but also cannot import from OSM file as it wasn't specified!");
 
         encodingManager.setEnableInstructions(enableInstructions);
+        encodingManager.setPreferredLanguage(preferredLanguage);
         DataReader reader = createReader(ghStorage);
         logger.info("using " + ghStorage.toString() + ", memory:" + Helper.getMemInfo());
         reader.readGraph();
@@ -815,9 +865,9 @@ public class GraphHopper implements GraphHopperAPI
         if (algoFactories.isEmpty())
             throw new IllegalStateException("No algorithm factories found. Call load before?");
 
-        Set<Weighting> set = new LinkedHashSet<Weighting>(algoFactories.keySet());
+        Set<Weighting> orderedSet = new LinkedHashSet<Weighting>(algoFactories.keySet());
         algoFactories.clear();
-        for (Weighting weighting : set)
+        for (Weighting weighting : orderedSet)
         {
             PrepareContractionHierarchies tmpPrepareCH = new PrepareContractionHierarchies(
                     new GHDirectory("", DAType.RAM_INT), ghStorage, ghStorage.getGraph(CHGraph.class, weighting),
@@ -1108,18 +1158,55 @@ public class GraphHopper implements GraphHopperAPI
         if (tmpPrepare)
         {
             ensureWriteAccess();
+
+            if (chPrepareThreads > 1 && dataAccessType.isMMap() && !dataAccessType.isSynched())
+                throw new IllegalStateException("You cannot execute CH preparation in parallel for MMAP without synching! Specify MMAP_SYNC or use 1 thread only");
+
             ghStorage.freeze();
 
             int counter = 0;
-            for (Entry<Weighting, RoutingAlgorithmFactory> entry : algoFactories.entrySet())
+            for (final Entry<Weighting, RoutingAlgorithmFactory> entry : algoFactories.entrySet())
             {
                 logger.info((++counter) + "/" + algoFactories.entrySet().size() + " calling prepare.doWork for " + entry.getKey() + " ... (" + Helper.getMemInfo() + ")");
                 if (!(entry.getValue() instanceof PrepareContractionHierarchies))
                     throw new IllegalStateException("RoutingAlgorithmFactory is not suited for CH preparation " + entry.getValue());
 
-                ((PrepareContractionHierarchies) entry.getValue()).doWork();
+                final String name = CHGraphImpl.weightingToFileName(entry.getKey());
+                chPreparePool.execute(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        String errorKey = "prepare.error." + name;
+                        try
+                        {
+                            ghStorage.getProperties().put(errorKey, "CH preparation incomplete");
+                            // toString is not taken into account so we need to cheat, see http://stackoverflow.com/q/6113746/194609 for other options                        
+                            Thread.currentThread().setName(name);
+                            PrepareContractionHierarchies pch = (PrepareContractionHierarchies) entry.getValue();
+                            pch.doWork();
+                            ghStorage.getProperties().put(errorKey, "");
+                            ghStorage.getProperties().put("prepare.date." + name, formatDateTime(new Date()));
+                        } catch (Exception ex)
+                        {
+                            logger.error("Problem while CH preparation " + name);
+                            ghStorage.getProperties().put(errorKey, ex.getMessage());
+                        }
+                    }
+                });
             }
-            ghStorage.getProperties().put("prepare.date", formatDateTime(new Date()));
+
+            chPreparePool.shutdown();
+            try
+            {
+                if (!chPreparePool.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS))
+                    chPreparePool.shutdownNow();
+
+            } catch (InterruptedException ie)
+            {
+                chPreparePool.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
         ghStorage.getProperties().put("prepare.done", tmpPrepare);
     }

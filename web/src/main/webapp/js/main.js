@@ -46,13 +46,6 @@ var iconTo = L.icon({
     iconAnchor: [12, 40]
 });
 
-var iconInt = L.icon({
-    iconUrl: './img/marker-icon-blue.png',
-    shadowSize: [50, 64],
-    shadowAnchor: [4, 62],
-    iconAnchor: [12, 40]
-});
-
 $(document).ready(function (e) {
     // fixing cross domain support e.g in Opera
     jQuery.support.cors = true;
@@ -619,7 +612,7 @@ function setFlag(coord, index) {
     if (coord.lat) {
         var toFrom = getToFrom(index),
                 marker = L.marker([coord.lat, coord.lng], {
-                    icon: ((toFrom === FROM) ? iconFrom : ((toFrom === TO) ? iconTo : iconInt)),
+                    icon: ((toFrom === FROM) ? iconFrom : ((toFrom === TO) ? iconTo : new L.NumberedDivIcon({number: index}))),
                     draggable: true,
                     contextmenu: true,
                     contextmenuItems: [{
@@ -1044,7 +1037,12 @@ function routeLatLng(request, doQuery) {
 
         var tmpTime = createTimeString(path.time);
         var tmpDist = createDistanceString(path.distance);
+        var tmpEleInfoStr = "";
+        if (request.hasElevation())
+            tmpEleInfoStr = createEleInfoString(path.ascend, path.descend);
+
         descriptionDiv.append(tr("routeInfo", [tmpDist, tmpTime]));
+        descriptionDiv.append(tmpEleInfoStr);
 
         $('.defaulting').each(function (index, element) {
             $(element).css("color", "black");
@@ -1095,7 +1093,7 @@ function routeLatLng(request, doQuery) {
             if (request.getVehicle().toUpperCase() === "FOOT") {
                 osmVehicle = "foot";
             }
-            osmRouteLink.attr("href", "http://www.openstreetmap.org/directions?engine=graphhopper_" 
+            osmRouteLink.attr("href", "http://www.openstreetmap.org/directions?engine=graphhopper_"
                     + osmVehicle + "&route=" + encodeURIComponent(request.from.lat + "," + request.from.lng + ";" + request.to.lat + "," + request.to.lng));
             hiddenDiv.append(osmRouteLink);
 
@@ -1133,6 +1131,20 @@ function createDistanceString(dist) {
     if (dist > 100)
         dist = round(dist, 1);
     return dist + tr2("kmAbbr");
+}
+
+function createEleInfoString(ascend, descend) {
+    var str = "";
+    if (ascend > 0 || descend > 0) {
+        str = "<br/> ";
+        if (ascend > 0)
+            str += "&#8599;" + round(ascend, 1) + tr2("mAbbr");
+
+        if (descend > 0)
+            str += " &#8600;" + round(descend, 1) + tr2("mAbbr");
+    }
+
+    return str;
 }
 
 function createTimeString(time) {
@@ -1180,7 +1192,7 @@ function addInstruction(main, instr, instrIndex, lngLat) {
     else if (sign === 6)
         sign = "roundabout";
     else
-        throw "did not found sign " + sign;
+        throw "did not find sign " + sign;
     var title = instr.text;
     if (instr.annotation_text) {
         if (!title)
