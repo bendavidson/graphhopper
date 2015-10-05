@@ -31,6 +31,7 @@ var routeSegmentPopup = null;
 var elevationControl = null;
 var activeLayer = 'local';
 var i18nIsInitialized;
+var metaVersionInfo = "";
 
 var iconFrom = L.icon({
     iconUrl: './img/marker-icon-green.png',
@@ -105,13 +106,17 @@ $(document).ready(function (e) {
                 bounds.maxLon = tmp[2];
                 bounds.maxLat = tmp[3];
                 var vehiclesDiv = $("#vehicles");
-                function createButton(vehicle) {
+
+                function createButton(vehicle, hide) {
                     var button = $("<button class='vehicle-btn' title='" + tr(vehicle) + "'/>");
+                    if (hide)
+                        button.hide();
+
                     button.attr('id', vehicle);
                     button.html("<img src='img/" + vehicle + ".png' alt='" + tr(vehicle) + "'></img>");
                     button.click(function () {
                         ghRequest.initVehicle(vehicle);
-                        resolveAll()
+                        resolveAll();
                         routeLatLng(ghRequest);
                     });
                     return button;
@@ -120,14 +125,41 @@ $(document).ready(function (e) {
                 if (json.features) {
                     ghRequest.features = json.features;
 
-                    var vehicles = Object.keys(json.features);
+                    // car, foot and bike should come first. mc comes last
+                    var prefer = {"car": 1, "foot": 2, "bike": 3, "motorcycle": 10000};
+                    var showAllVehicles = urlParams.vehicle && (!prefer[urlParams.vehicle] || prefer[urlParams.vehicle] > 3);
+                    var vehicles = getSortedVehicleKeys(json.features, prefer);
                     if (vehicles.length > 0)
                         ghRequest.initVehicle(vehicles[0]);
 
-                    for (var key in json.features) {
-                        vehiclesDiv.append(createButton(key.toLowerCase()));
+                    var hiddenVehicles = [];
+                    for (var i in vehicles) {
+                        var btn = createButton(vehicles[i].toLowerCase(), !showAllVehicles && i > 2);
+                        vehiclesDiv.append(btn);
+
+                        if (i > 2)
+                            hiddenVehicles.push(btn);
+                    }
+
+                    if (!showAllVehicles && vehicles.length > 3) {
+                        var moreBtn = $("<a id='more-vehicle-btn'> ...</a>").click(function () {
+                            moreBtn.hide();
+                            for (var i in hiddenVehicles) {
+                                hiddenVehicles[i].show();
+                            }
+                        });
+                        vehiclesDiv.append(moreBtn);
                     }
                 }
+
+                if (json.import_date)
+                    metaVersionInfo = "<br/>Import date: " + json.import_date;
+                if (json.prepare_date)
+                    metaVersionInfo += "<br/>Prepare date: " + json.prepare_date;
+                if (json.version)
+                    metaVersionInfo += "<br/>GH Version: " + json.version;
+                if (json.build_date)
+                    metaVersionInfo += "<br/>Jar Date: " + json.build_date;
 
                 initMap(urlParams.layer);
 
@@ -179,20 +211,45 @@ $(document).ready(function (e) {
     checkInput();
 });
 
+function getSortedVehicleKeys(vehicleHashMap, prefer) {
+    var keys = Object.keys(vehicleHashMap);
+
+    keys.sort(function (a, b) {
+        var intValA = prefer[a];
+        var intValB = prefer[b];
+
+        if (!intValA && !intValB)
+            return a.localeCompare(b);
+
+        if (!intValA)
+            intValA = 4;
+        if (!intValB)
+            intValB = 4;
+
+        return intValA - intValB;
+    });
+    return keys;
+}
+
 function initFromParams(params, doQuery) {
     ghRequest.init(params);
-    var fromAndTo = params.from && params.to,
-            routeNow = params.point && params.point.length >= 2 || fromAndTo;
+    var count = 0;
+    var singlePointIndex;
+    for (var key = 0; key < params.point.length; key++) {
+        if (params.point[key] !== "") {
+            count++;
+            singlePointIndex = key;
+        }
+    }
 
+    var routeNow = params.point && count >= 2;
     if (routeNow) {
-        if (fromAndTo)
-            resolveCoords([params.from, params.to], doQuery);
-        else
-            resolveCoords(params.point, doQuery);
-    } else if (params.point && params.point.length === 1) {
-        ghRequest.from = new GHInput(params.point[0]);
-        resolve("from", ghRequest.from);
-        focus(ghRequest.from, 15, true);
+        resolveCoords(params.point, doQuery);
+    } else if (params.point && count === 1) {
+        ghRequest.route.set(params.point[singlePointIndex], singlePointIndex, true);
+        resolveIndex(singlePointIndex).done(function () {
+            focus(ghRequest.route.getIndex(singlePointIndex), 15, singlePointIndex);
+        });
     }
 }
 
@@ -1118,6 +1175,9 @@ function routeLatLng(request, doQuery) {
             var bingLink = $("<a>Bing</a> ");
             bingLink.attr("href", "https://www.bing.com/maps/default.aspx?rtp=adr." + request.from + "~adr." + request.to + addToBing);
             hiddenDiv.append(bingLink);
+            if (metaVersionInfo)
+                hiddenDiv.append(metaVersionInfo);
+
             $("#info").append(hiddenDiv);
         }
     });
@@ -1264,8 +1324,6 @@ function parseUrl(query) {
         var key = vars[i].substring(0, indexPos);
         var value = vars[i].substring(indexPos + 1);
         value = decodeURIComponent(value.replace(/\+/g, ' '));
-        if (value === "")
-            continue;
 
         // force array for heading and point
         if (typeof res[key] === "undefined"
