@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -101,7 +101,7 @@ public class GraphHopper implements GraphHopperAPI
     private ElevationProvider eleProvider = ElevationProvider.NOOP;
 
     public GraphHopper()
-    {
+    {       
         setCHPrepareThreads(1);
     }
 
@@ -580,7 +580,7 @@ public class GraphHopper implements GraphHopperAPI
         removeZipped = args.getBool("graph.removeZipped", removeZipped);
         int bytesForFlags = args.getInt("graph.bytesForFlags", 4);
         String flagEncoders = args.get("graph.flagEncoders", "");
-        if (!flagEncoders.isEmpty())
+        if (!flagEncoders.isEmpty())            
             setEncodingManager(new EncodingManager(flagEncoders, bytesForFlags));
 
         if (args.get("graph.locktype", "native").equals("simple"))
@@ -691,8 +691,11 @@ public class GraphHopper implements GraphHopperAPI
 
             try
             {
-                importData();
-                ghStorage.getProperties().put("osmreader.import.date", formatDateTime(new Date()));
+                DataReader reader = importData();
+                DateFormat f = Helper.createFormatter();
+                ghStorage.getProperties().put("osmreader.import.date", f.format(new Date()));
+                if (reader.getDataDate() != null)
+                    ghStorage.getProperties().put("osmreader.data.date", f.format(reader.getDataDate()));
             } catch (IOException ex)
             {
                 throw new RuntimeException("Cannot parse OSM file " + getOSMFile(), ex);
@@ -1026,7 +1029,7 @@ public class GraphHopper implements GraphHopperAPI
         List<GHPoint> points = request.getPoints();
         if (points.size() < 2)
         {
-            rsp.addError(new IllegalStateException("At least 2 points has to be specified, but was:" + points.size()));
+            rsp.addError(new IllegalStateException("At least 2 points have to be specified, but was:" + points.size()));
             return Collections.emptyList();
         }
 
@@ -1189,7 +1192,7 @@ public class GraphHopper implements GraphHopperAPI
                             PrepareContractionHierarchies pch = (PrepareContractionHierarchies) entry.getValue();
                             pch.doWork();
                             ghStorage.getProperties().put(errorKey, "");
-                            ghStorage.getProperties().put("prepare.date." + name, formatDateTime(new Date()));
+                            ghStorage.getProperties().put("prepare.date." + name, Helper.createFormatter().format(new Date()));
                         } catch (Exception ex)
                         {
                             logger.error("Problem while CH preparation " + name);
@@ -1272,13 +1275,6 @@ public class GraphHopper implements GraphHopperAPI
 
         File folder = new File(getGraphHopperLocation());
         Helper.removeDir(folder);
-    }
-
-    // make sure this is identical to buildDate used in pom.xml
-    // <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
-    private String formatDateTime( Date date )
-    {
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(date);
     }
 
     protected void ensureNotLoaded()

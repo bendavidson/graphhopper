@@ -31,7 +31,7 @@ var routeSegmentPopup = null;
 var elevationControl = null;
 var activeLayer = 'local';
 var i18nIsInitialized;
-var metaVersionInfo = "";
+var metaVersionInfo;
 
 var iconFrom = L.icon({
     iconUrl: './img/marker-icon-green.png',
@@ -50,6 +50,82 @@ var iconTo = L.icon({
 $(document).ready(function (e) {
     // fixing cross domain support e.g in Opera
     jQuery.support.cors = true;
+    var dialog;
+
+    function exportFlaggedGPX( )
+    {
+        exportGPX($("#gpx_route").is(':checked'), $("#gpx_track").is(':checked'), $("#gpx_waypoints").is(':checked'));
+        dialog.dialog("close");
+        return false;
+    }
+    ;
+
+    $(function () {
+        dialog = $("#gpx_dialog").dialog({
+            width: 420,
+            height: 260,
+            autoOpen: false,
+            resizable: false,
+            draggable: false,
+            buttons: {
+                "Export GPX": exportFlaggedGPX,
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
+        //Make sure that at least one of the data types remains checked for the GPX export:
+        $("#gpx_route").change(function () {
+            if (!$(this).is(':checked'))
+            {
+                if (!$("#gpx_track").is(':checked'))
+                    $("#gpx_waypoints").prop("disabled", true);
+                else {
+                    if (!$("#gpx_waypoints").is(':checked'))
+                        $("#gpx_track").prop("disabled", true);
+                }
+            }
+            else
+            {
+                $("#gpx_track").prop("disabled", false);
+                $("#gpx_waypoints").prop("disabled", false);
+            }
+        });
+        $("#gpx_track").change(function () {
+            if (!$(this).is(':checked'))
+            {
+                if (!$("#gpx_route").is(':checked'))
+                    $("#gpx_waypoints").prop("disabled", true);
+                else {
+                    if (!$("#gpx_waypoints").is(':checked'))
+                        $("#gpx_route").prop("disabled", true);
+                }
+            }
+            else
+            {
+                $("#gpx_route").prop("disabled", false);
+                $("#gpx_waypoints").prop("disabled", false);
+            }
+        });
+        $("#gpx_waypoints").change(function () {
+            if (!$(this).is(':checked'))
+            {
+                if (!$("#gpx_route").is(':checked'))
+                    $("#gpx_track").prop("disabled", true);
+                else {
+                    if (!$("#gpx_track").is(':checked'))
+                        $("#gpx_route").prop("disabled", true);
+                }
+            }
+            else
+            {
+                $("#gpx_route").prop("disabled", false);
+                $("#gpx_track").prop("disabled", false);
+            }
+        });
+
+    });
 
     if (isProduction())
         $('#hosting').show();
@@ -76,7 +152,7 @@ $(document).ready(function (e) {
     $('#gpxExportButton a').click(function (e) {
         // no page reload
         e.preventDefault();
-        exportGPX();
+        $("#gpx_dialog").dialog('open');
     });
 
     var urlParams = parseUrlWithHisto();
@@ -151,15 +227,17 @@ $(document).ready(function (e) {
                         vehiclesDiv.append(moreBtn);
                     }
                 }
-
+                metaVersionInfo = "";
+                if (json.data_date)
+                    metaVersionInfo += "<br/>Data date: " + json.data_date;
                 if (json.import_date)
-                    metaVersionInfo = "<br/>Import date: " + json.import_date;
+                    metaVersionInfo += "<br/>Import date: " + json.import_date;
                 if (json.prepare_date)
                     metaVersionInfo += "<br/>Prepare date: " + json.prepare_date;
                 if (json.version)
-                    metaVersionInfo += "<br/>GH Version: " + json.version;
+                    metaVersionInfo += "<br/>GH version: " + json.version;
                 if (json.build_date)
-                    metaVersionInfo += "<br/>Jar Date: " + json.build_date;
+                    metaVersionInfo += "<br/>Jar date: " + json.build_date;
 
                 initMap(urlParams.layer);
 
@@ -235,12 +313,13 @@ function initFromParams(params, doQuery) {
     ghRequest.init(params);
     var count = 0;
     var singlePointIndex;
-    for (var key = 0; key < params.point.length; key++) {
-        if (params.point[key] !== "") {
-            count++;
-            singlePointIndex = key;
+    if (params.point)
+        for (var key = 0; key < params.point.length; key++) {
+            if (params.point[key] !== "") {
+                count++;
+                singlePointIndex = key;
+            }
         }
-    }
 
     var routeNow = params.point && count >= 2;
     if (routeNow) {
@@ -1469,9 +1548,9 @@ function initI18N() {
     $('#gpxExportButton').attr("title", tr("gpxExportButton"));
 }
 
-function exportGPX() {
+function exportGPX(withRoute, withTrack, withWayPoint) {
     if (ghRequest.route.isResolved())
-        window.open(ghRequest.createGPXURL());
+        window.open(ghRequest.createGPXURL(withRoute, withTrack, withWayPoint));
     return false;
 }
 
