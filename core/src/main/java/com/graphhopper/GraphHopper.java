@@ -101,7 +101,7 @@ public class GraphHopper implements GraphHopperAPI
     private ElevationProvider eleProvider = ElevationProvider.NOOP;
 
     public GraphHopper()
-    {       
+    {
         setCHPrepareThreads(1);
     }
 
@@ -580,7 +580,7 @@ public class GraphHopper implements GraphHopperAPI
         removeZipped = args.getBool("graph.removeZipped", removeZipped);
         int bytesForFlags = args.getInt("graph.bytesForFlags", 4);
         String flagEncoders = args.get("graph.flagEncoders", "");
-        if (!flagEncoders.isEmpty())            
+        if (!flagEncoders.isEmpty())
             setEncodingManager(new EncodingManager(flagEncoders, bytesForFlags));
 
         if (args.get("graph.locktype", "native").equals("simple"))
@@ -943,9 +943,16 @@ public class GraphHopper implements GraphHopperAPI
                 return new PriorityWeighting(encoder, weightingMap);
             else
                 return new FastestWeighting(encoder, weightingMap);
+        } else if ("curvature".equalsIgnoreCase(weighting))
+        {
+            if (encoder.supports(CurvatureWeighting.class))
+                return new CurvatureWeighting(encoder, weightingMap, ghStorage);
+            else
+                return new FastestWeighting(encoder, weightingMap);
         }
 
         throw new UnsupportedOperationException("weighting " + weighting + " not supported");
+
     }
 
     public Weighting getWeightingForCH( WeightingMap weightingMap, FlagEncoder encoder )
