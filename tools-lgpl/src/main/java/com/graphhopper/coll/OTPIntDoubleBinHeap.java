@@ -17,20 +17,20 @@ import java.util.Arrays;
 /**
  * Taken from opentripplanner.
  */
-public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
+public class OTPIntDoubleBinHeap
 {
     private static final double GROW_FACTOR = 2.0;
-    private int[] keys;
+    private float[] keys;
     private int[] elem;
     private int size;
     private int capacity;
 
-    public IntIntBinHeap()
+    public OTPIntDoubleBinHeap()
     {
         this(1000);
     }
 
-    public IntIntBinHeap( int capacity )
+    public OTPIntDoubleBinHeap( int capacity )
     {
         if (capacity < 10)
         {
@@ -40,30 +40,32 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
         size = 0;
         elem = new int[capacity + 1];
         // 1-based indexing
-        keys = new int[capacity + 1];
+        keys = new float[capacity + 1];
         // set sentinel
-        keys[0] = Integer.MIN_VALUE;
+        keys[0] = Float.NEGATIVE_INFINITY;
     }
 
-    @Override
     public int getSize()
     {
         return size;
     }
 
-    @Override
+    public int size()
+    {
+        return size;
+    }
+
     public boolean isEmpty()
     {
         return size == 0;
     }
 
-    @Override
-    public Integer peekKey()
+    public Double peekKey()
     {
         return peek_key();
     }
 
-    public int peek_key()
+    public double peek_key()
     {
         if (size > 0)
         {
@@ -74,7 +76,6 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
         }
     }
 
-    @Override
     public Integer peekElement()
     {
         return peek_element();
@@ -91,7 +92,6 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
         }
     }
 
-    @Override
     public Integer pollElement()
     {
         return poll_element();
@@ -102,7 +102,7 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
         int i, child;
         int minElem = elem[1];
         int lastElem = elem[size];
-        int lastPrio = keys[size];
+        double lastPrio = keys[size];
         if (size <= 0)
         {
             throw new IllegalStateException("An empty queue does not have a minimum value.");
@@ -125,31 +125,30 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
             }
         }
         elem[i] = lastElem;
-        keys[i] = lastPrio;
+        keys[i] = (float) lastPrio;
         return minElem;
     }
 
-    @Override
-    public void update( Number key, Integer value )
+    public void update( Number key, Integer element )
     {
-        update_(key.intValue(), value);
+        update_(key.doubleValue(), element);
     }
 
-    public void update_( int key, int value )
+    public boolean update_( double key, int element )
     {
         // Perform "inefficient" but straightforward linear search 
         // for an element then change its key by sifting up or down
         int i;
         for (i = 1; i <= size; i++)
         {
-            if (elem[i] == value)
+            if (elem[i] == element)
             {
                 break;
             }
         }
         if (i > size)
         {
-            return;
+            return false;
         }
 
         if (key > keys[i])
@@ -172,35 +171,29 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
                     break;
                 }
             }
-            elem[i] = value;
-            keys[i] = key;
+            elem[i] = element;
+            keys[i] = (float) key;
         } else
         {
-            // sift down (as in insert)
+            // sift down (as in insert_)
             while (keys[i / 2] > key)
             {
                 elem[i] = elem[i / 2];
                 keys[i] = keys[i / 2];
                 i /= 2;
             }
-            elem[i] = value;
-            keys[i] = key;
+            elem[i] = element;
+            keys[i] = (float) key;
         }
+        return true;
     }
 
-    public void reset()
+    public void insert( Number key, Integer element )
     {
-        // empties the queue in one operation
-        size = 0;
+        insert_(key.doubleValue(), element);
     }
 
-    @Override
-    public void insert( Number key, Integer value )
-    {
-        insert_(key.intValue(), value);
-    }
-
-    public void insert_( int key, int value )
+    public void insert_( double key, int element )
     {
         int i;
         size += 1;
@@ -213,13 +206,13 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
             elem[i] = elem[i / 2];
             keys[i] = keys[i / 2];
         }
-        elem[i] = value;
-        keys[i] = key;
+        elem[i] = element;
+        keys[i] = (float) key;
     }
 
-    @Override
     public void ensureCapacity( int capacity )
     {
+        // System.out.println("Growing queue to " + capacity);
         if (capacity < size)
         {
             throw new IllegalStateException("BinHeap contains too many elements to fit in new capacity.");
@@ -229,11 +222,79 @@ public class IntIntBinHeap implements BinHeapWrapper<Number, Integer>
         elem = Arrays.copyOf(elem, capacity + 1);
     }
 
-    @Override
+    public int getCapacity()
+    {
+        return capacity;
+    }
+
+    float getKey( int index )
+    {
+        return keys[index];
+    }
+
+    int getElement( int index )
+    {
+        return elem[index];
+    }
+
+    void set( int index, float key, int element )
+    {
+        keys[index] = key;
+        elem[index] = element;
+    }
+
+    void trimTo( int toSize )
+    {
+        this.size = toSize;
+        toSize++;
+        // necessary as we currently do not init arrays when inserting
+        Arrays.fill(keys, toSize, size + 1, 0f);
+        Arrays.fill(elem, toSize, size + 1, 0);
+    }
+
     public void clear()
     {
-        this.size = 0;
-        Arrays.fill(keys, 0);
-        Arrays.fill(elem, 0);
+        trimTo(0);
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= size; i++)
+        {
+            if (i > 1)
+            {
+                sb.append(", ");
+            }
+            sb.append(keys[i]).append(":").append(elem[i]);
+        }
+        return sb.toString();
+    }
+
+    public String toKeyString()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= size; i++)
+        {
+            if (i > 1)
+            {
+                sb.append(", ");
+            }
+            sb.append(keys[i]);
+        }
+        return sb.toString();
+    }
+
+    public int indexOfValue( int value )
+    {
+        for (int i = 0; i <= size; i++)
+        {
+            if (elem[i] == value)
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 }

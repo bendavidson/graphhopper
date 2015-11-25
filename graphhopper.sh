@@ -112,7 +112,7 @@ function packageCoreJar {
     echo "## now building graphhopper jar: $JAR"
     echo "## using maven at $MAVEN_HOME"
     #mvn clean
-    "$MAVEN_HOME/bin/mvn" --projects core,tools -DskipTests=true install assembly:single > /tmp/graphhopper-compile.log
+    "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests=true install assembly:single > /tmp/graphhopper-compile.log
     returncode=$?
     if [[ $returncode != 0 ]] ; then
         echo "## compilation of core failed"
@@ -153,7 +153,7 @@ elif [ "$ACTION" = "extract" ]; then
  
 elif [ "$ACTION" = "android" ]; then
  prepareEclipse
- "$MAVEN_HOME/bin/mvn" -P include-android --projects android install android:deploy android:run
+ "$MAVEN_HOME/bin/mvn" -P include-android --projects android/app install android:deploy android:run
  exit
 fi
 
@@ -288,7 +288,7 @@ elif [ "$ACTION" = "measurement" ]; then
   
  if [ "$last_commits" = "" ]; then
    # use current version
-   "$MAVEN_HOME/bin/mvn" --projects core,tools -DskipTests clean install assembly:single
+   "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
    startMeasurement
    exit
  fi
@@ -301,7 +301,7 @@ elif [ "$ACTION" = "measurement" ]; then
    M_FILE_NAME="measurement$M_FILE_NAME.properties"
    echo -e "\nusing commit $commit and $M_FILE_NAME"
    
-   "$MAVEN_HOME/bin/mvn" --projects core,tools -DskipTests clean install assembly:single
+   "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
    startMeasurement
    echo -e "\nmeasurement.commit=$commit\n" >> "$M_FILE_NAME"
  done
