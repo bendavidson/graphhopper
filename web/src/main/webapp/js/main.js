@@ -1340,23 +1340,26 @@ function addInstruction(main, instr, instrIndex, lngLat) {
         else
             title = title + ", " + instr.annotation_text;
     }
-    var distance = instr.distance;
-    var str = "<td class='instr_title'>" + title + "</td>";
 
-    if (distance > 0) {
-        str += " <td class='instr_distance'><span>"
-                + createDistanceString(distance) + "<br/>"
-                + createTimeString(instr.time) + "</span></td>";
-    }
-
+    var instructionDiv = $("<tr class='instruction'/>");
     if (sign !== "continue") {
         var indiPic = "<img class='pic' style='vertical-align: middle' src='" +
                 window.location.pathname + "img/" + sign + ".png'/>";
-        str = "<td class='instr_pic'>" + indiPic + "</td>" + str;
+        instructionDiv.append("<td class='instr_pic'>" + indiPic + "</td>");
     } else
-        str = "<td class='instr_pic'/>" + str;
-    var instructionDiv = $("<tr class='instruction'/>");
-    instructionDiv.html(str);
+        instructionDiv.append("<td class='instr_pic'/>");
+
+    var tdVar = $("<td class='instr_title'>");
+    tdVar.text(title);
+
+    instructionDiv.append(tdVar);
+    var distance = instr.distance;
+    if (distance > 0) {
+        instructionDiv.append("<td class='instr_distance'><span>"
+                + createDistanceString(distance) + "<br/>"
+                + createTimeString(instr.time) + "</span></td>");
+    }
+
     if (lngLat) {
         instructionDiv.click(function () {
             if (routeSegmentPopup)
@@ -1565,7 +1568,7 @@ function hideAutoComplete() {
 
 function formatValue(orig, query) {
     var pattern = '(' + $.Autocomplete.utils.escapeRegExChars(query) + ')';
-    return orig.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>');
+    return orig.replace(/[<>]/g, "_").replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>');
 }
 
 function setAutoCompleteList(index) {
