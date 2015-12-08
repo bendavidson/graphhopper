@@ -96,29 +96,29 @@ function ensureMaven {
   fi
 }
 
+function execMvn {
+  # echo "exec maven with $@"
+  "$MAVEN_HOME/bin/mvn" "$@" > /tmp/graphhopper-compile.log
+  returncode=$?
+  if [[ $returncode != 0 ]] ; then
+    echo "## compilation of parent failed"
+    cat /tmp/graphhopper-compile.log
+    exit $returncode
+  fi
+}
+
 function packageCoreJar {
   if [ ! -d "$GH_HOME/target" ]; then
     echo "## building parent"
-    "$MAVEN_HOME/bin/mvn" --non-recursive install > /tmp/graphhopper-compile.log
-     returncode=$?
-     if [[ $returncode != 0 ]] ; then
-       echo "## compilation of parent failed"
-       cat /tmp/graphhopper-compile.log
-       exit $returncode
-     fi                                     
+    execMvn --non-recursive install
   fi
   
   if [ ! -f "$JAR" ]; then
     echo "## now building graphhopper jar: $JAR"
     echo "## using maven at $MAVEN_HOME"
-    #mvn clean
-    "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests=true install assembly:single > /tmp/graphhopper-compile.log
-    returncode=$?
-    if [[ $returncode != 0 ]] ; then
-        echo "## compilation of core failed"
-        cat /tmp/graphhopper-compile.log
-        exit $returncode
-    fi      
+    
+    execMvn --projects tools -am -DskipTests=true install
+    execMvn --projects tools -DskipTests=true install assembly:single
   else
     echo "## existing jar found $JAR"
   fi
@@ -223,13 +223,7 @@ if [ "$ACTION" = "ui" ] || [ "$ACTION" = "web" ]; then
   fi
   WEB_JAR="$GH_HOME/web/target/graphhopper-web-$VERSION-with-dep.jar"
   if [ ! -s "$WEB_JAR" ]; then         
-    "$MAVEN_HOME/bin/mvn" --projects web -DskipTests=true install assembly:single > /tmp/graphhopper-web-compile.log
-    returncode=$?
-    if [[ $returncode != 0 ]] ; then
-      echo "## compilation of web failed"
-      cat /tmp/graphhopper-web-compile.log
-      exit $returncode
-    fi
+    execMvn --projects web -DskipTests=true install assembly:single
   fi
 
   RC_BASE="$GH_HOME/web/src/main/webapp"
