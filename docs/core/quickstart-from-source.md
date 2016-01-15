@@ -35,7 +35,8 @@ installed when executing graphhopper.sh.
 
 ### NetBeans, IntelliJ, Eclipse
 
- * For IntelliJ you need to import the code formatting settings (File|Import Settings). Load them from core/files/intellij-settings.jar. See the [special setup](../android/android-studio-setup.md) for Android if using Android studio.
+ * For IntelliJ you need to import the code formatting settings (File|Import Settings). Load them from `core/files/intellij-settings.jar`. See the [special setup](../android/android-studio-setup.md) for Android if using Android studio.
+   * For IntelliJ15 there is also a formatting description, that should be imported using (Preferences|Editor|Code Style|Java|Manage|Import) from `core/files/IntelliJ15GraphHopperFormatting.xml`. 
  * For Eclipse please refer to [this separate setup documentation](./eclipse-setup.md).
  * Nothing special needs to be done for NetBeans.
 
@@ -91,6 +92,41 @@ If you need **offline** routing in the browser like for smaller areas or hybrid 
 then there is a highly experimental version of GraphHopper using TeaVM. 
 Have a look into this [blog post](http://karussell.wordpress.com/2014/05/04/graphhopper-in-the-browser-teavm-makes-offline-routing-via-openstreetmap-possible-in-javascript/) 
 for a demo and more information.
+
+If you want to change the JavaScript you have to setup the JavaScript environment:
+```
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash
+# close and reopen terminal now
+nvm install 4.2.2
+nvm use 4.2.2
+
+# git clone https://github.com/graphhopper/graphhopper.git
+cd graphhopper/web
+# download required packages:
+npm install
+npm test
+# create main.js
+npm run bundle
+
+cd ..
+./graphhopper.sh web africa_canary-islands.pbf
+firefox localhost:8989
+```
+
+Using these Commands you can create the main.js:
+```
+# For development just use watchify:
+npm run watch
+# see the package.json where several other scripts like bundleDebug are defined
+# bundle creates the main file
+npm run bundle
+# create main.js for debugging
+npm run bundleDebug
+npm run bundleUgly
+
+# Forcing consistent code style with jshint. JsHint can be run with:
+npm run jshint
+```
 
 ### Android Usage
  
