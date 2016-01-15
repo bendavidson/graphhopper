@@ -1,6 +1,6 @@
 body {
     color: #000;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;    
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.4;
     color: #111111;
     background-color: white;
@@ -14,7 +14,7 @@ body {
 
 #input {
     float: left;
-    margin-left: 10px; 
+    margin-left: 10px;
     /*padding-right: 15px; */
 }
 
@@ -29,7 +29,7 @@ body {
     padding-right: 5px;
 }
 
-#input, #instructions {
+#input, #instructions, #footer {
     width: 280px;
 }
 .pointInput {
@@ -84,7 +84,7 @@ body {
     padding-bottom: 10px;
     float: left;
 }
-.pointDiv { 
+.pointDiv {
     margin: 6px 0;
 }
 .pointDiv > img {
@@ -160,8 +160,8 @@ body {
     margin-bottom: 5px;
 }
 
-#searchButton:hover { 
-    cursor: pointer; 
+#searchButton:hover {
+    cursor: pointer;
 }
 .clear {
     clear: both;
@@ -180,7 +180,7 @@ body {
 #footer {
     position: fixed;
     bottom: 5px;
-    left: 45px;
+    left: 30px;    
 }
 
 #hosting a, .footer-link {
@@ -219,7 +219,7 @@ td.instr_title {
 }
 td.instr_distance {
     min-width: 50px;
-    float: right;    
+    float: right;
     color: gray;
     text-align: right;
 }
@@ -227,7 +227,7 @@ td.instr_distance {
 #instructions tr .instr_pic {
     width: 20px;
 }
-td img.pic {    
+td img.pic {
     max-height: 24px;
     max-width: 16px;
 }
@@ -247,11 +247,10 @@ td img.pic {
 }
 
 .selectvehicle {
-    // background-clip: padding-box;
     background-color: #bbb;
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
-    background-image: linear-gradient(to bottom, #9f9f9f, #e7e7e7);    
+    background-image: linear-gradient(to bottom, #9f9f9f, #e7e7e7);
 }
 
 #more-vehicle-btn {
@@ -261,11 +260,11 @@ td img.pic {
 .autocomplete {
     border: 1px solid #999;
     background: #FFF;
-    overflow: auto; 
+    overflow: auto;
 }
 .autocomplete strong {
     font-weight: normal;
-    color: #04B431; 
+    color: #04B431;
 }
 .autocomplete-suggestion {
     padding: 5px 5px;
@@ -336,4 +335,17 @@ td img.pic {
 .ui-dialog .ui-dialog-titlebar {
     padding: 10px;
     background: #00cc33;
+}
+
+#donate_form {
+    padding: 0;    
+}
+
+#donate_form_button {
+    background: none;
+    border: none;
+    padding-left: 0px;
+    margin-top: 5px;
+    cursor: pointer;
+    float: left;
 }
