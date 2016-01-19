@@ -78,7 +78,7 @@ public class GraphHopperTest
         closableInstance.importOrLoad();
         GHResponse rsp = closableInstance.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
 
         closableInstance.close();
 
@@ -87,7 +87,7 @@ public class GraphHopperTest
         assertTrue(closableInstance.load(ghLoc));
         rsp = closableInstance.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
 
         closableInstance.close();
         try
@@ -120,7 +120,7 @@ public class GraphHopperTest
         gh.importOrLoad();
         GHResponse rsp = gh.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
 
         gh.close();
         gh = new GraphHopper().setStoreOnFlush(true).
@@ -129,7 +129,7 @@ public class GraphHopperTest
         assertTrue(gh.load(ghLoc));
         rsp = gh.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
 
         gh.close();
     }
@@ -145,7 +145,7 @@ public class GraphHopperTest
         gh.importOrLoad();
         GHResponse rsp = gh.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
         gh.close();
 
         gh = new GraphHopper().setStoreOnFlush(true).
@@ -171,7 +171,7 @@ public class GraphHopperTest
         gh.importOrLoad();
         rsp = gh.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4));
         assertFalse(rsp.hasErrors());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(3, rsp.getPoints().getSize());
         gh.close();
 
         gh = new GraphHopper().setStoreOnFlush(true).
@@ -283,15 +283,15 @@ public class GraphHopperTest
         instance = new GraphHopper().
                 setStoreOnFlush(false).
                 setEncodingManager(new EncodingManager("CAR")).
-                setCHWeightings(Arrays.asList("shortest")).
+                setCHWeighting("shortest").
                 setGraphHopperLocation(ghLoc).
                 setOSMFile(testOsm);
         instance.importOrLoad();
         GHResponse rsp = instance.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4).
                 setAlgorithm(AlgorithmOptions.DIJKSTRA_BI));
         assertFalse(rsp.hasErrors());
-        assertEquals(Helper.createPointList(51.249215, 9.431716, 52.0, 9.0, 51.2, 9.4), rsp.getFirst().getPoints());
-        assertEquals(3, rsp.getFirst().getPoints().getSize());
+        assertEquals(Helper.createPointList(51.249215, 9.431716, 52.0, 9.0, 51.2, 9.4), rsp.getPoints());
+        assertEquals(3, rsp.getPoints().getSize());
     }
 
     @Test
@@ -304,8 +304,8 @@ public class GraphHopperTest
                 setGraphHopperLocation(ghLoc).
                 setOSMFile(testOsm);
         instance.importOrLoad();
-        AltResponse rsp = instance.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4).
-                setAlgorithm(AlgorithmOptions.DIJKSTRA_BI)).getFirst();
+        GHResponse rsp = instance.route(new GHRequest(51.2492152, 9.4317166, 51.2, 9.4).
+                setAlgorithm(AlgorithmOptions.DIJKSTRA_BI));
         assertFalse(rsp.hasErrors());
         assertEquals(3, rsp.getPoints().getSize());
         assertEquals(new GHPoint(51.24921503475044, 9.431716451757769), rsp.getPoints().toGHPoint(0));
@@ -338,9 +338,9 @@ public class GraphHopperTest
         assertEquals(8, instance.getGraphHopperStorage().getAllEdges().getMaxId());
 
         // A to D
-        GHResponse grsp = instance.route(new GHRequest(11.1, 50, 11.3, 51).setVehicle(EncodingManager.CAR));
-        assertFalse(grsp.hasErrors());
-        AltResponse rsp = grsp.getFirst();
+        GHResponse rsp = instance.route(new GHRequest(11.1, 50, 11.3, 51).setVehicle(EncodingManager.CAR));
+        assertFalse(rsp.hasErrors());
+        assertFalse(rsp.hasErrors());
         assertEquals(3, rsp.getPoints().getSize());
         // => found A and D
         assertEquals(50, rsp.getPoints().getLongitude(0), 1e-3);
@@ -349,24 +349,21 @@ public class GraphHopperTest
         assertEquals(11.3, rsp.getPoints().getLatitude(2), 1e-3);
 
         // A to D not allowed for foot. But the location index will choose a node close to D accessible to FOOT        
-        grsp = instance.route(new GHRequest(11.1, 50, 11.3, 51).setVehicle(EncodingManager.FOOT));
-        assertFalse(grsp.hasErrors());
-        rsp = grsp.getFirst();
+        rsp = instance.route(new GHRequest(11.1, 50, 11.3, 51).setVehicle(EncodingManager.FOOT));
+        assertFalse(rsp.hasErrors());
         assertEquals(2, rsp.getPoints().getSize());
         // => found a point on edge A-B        
         assertEquals(11.680, rsp.getPoints().getLatitude(1), 1e-3);
         assertEquals(50.644, rsp.getPoints().getLongitude(1), 1e-3);
 
         // A to E only for foot
-        grsp = instance.route(new GHRequest(11.1, 50, 10, 51).setVehicle(EncodingManager.FOOT));
-        assertFalse(grsp.hasErrors());
-        rsp = grsp.getFirst();
+        rsp = instance.route(new GHRequest(11.1, 50, 10, 51).setVehicle(EncodingManager.FOOT));
+        assertFalse(rsp.hasErrors());
         assertEquals(2, rsp.getPoints().size());
 
         // A D E for car
-        grsp = instance.route(new GHRequest(11.1, 50, 10, 51).setVehicle(EncodingManager.CAR));
-        assertFalse(grsp.hasErrors());
-        rsp = grsp.getFirst();
+        rsp = instance.route(new GHRequest(11.1, 50, 10, 51).setVehicle(EncodingManager.CAR));
+        assertFalse(rsp.hasErrors());
         assertEquals(3, rsp.getPoints().getSize());
     }
 
@@ -538,17 +535,16 @@ public class GraphHopperTest
         assertEquals(2, instance.getGraphHopperStorage().getAllEdges().getMaxId());
 
         // A to E only for foot
-        GHResponse grsp = instance.route(new GHRequest(11.1, 50, 11.2, 52.01).setVehicle(EncodingManager.FOOT));
-        assertFalse(grsp.hasErrors());
-        AltResponse rsp = grsp.getFirst();
-        assertEquals(Helper.createPointList(11.1, 50, 10, 51, 11.2, 52), rsp.getPoints());
+        GHResponse res = instance.route(new GHRequest(11.1, 50, 11.2, 52.01).setVehicle(EncodingManager.FOOT));
+        assertFalse(res.hasErrors());
+        assertEquals(Helper.createPointList(11.1, 50, 10, 51, 11.2, 52), res.getPoints());
     }
 
     @Test
     public void testPrepareOnly()
     {
         instance = new GraphHopper().setStoreOnFlush(true).
-                setCHWeightings(Arrays.asList("shortest")).
+                setCHWeighting("shortest").
                 setEncodingManager(new EncodingManager("FOOT")).
                 setDoPrepare(false).
                 setGraphHopperLocation(ghLoc).
@@ -557,7 +553,7 @@ public class GraphHopperTest
         instance.close();
 
         instance = new GraphHopper().setStoreOnFlush(true).
-                setCHWeightings(Arrays.asList("shortest")).
+                setCHWeighting("shortest").
                 setGraphHopperLocation(ghLoc).
                 setOSMFile(testOsm3);
 
@@ -575,7 +571,7 @@ public class GraphHopperTest
         // use the encoding manager from the graph
         instance = new GraphHopper().setStoreOnFlush(true).
                 setEncodingManager(new EncodingManager("FOOT")).
-                setCHWeightings(Arrays.asList("shortest")).
+                setCHWeighting("shortest").
                 setGraphHopperLocation(ghLoc).
                 setOSMFile(testOsm3);
         instance.load(ghLoc);
@@ -598,15 +594,16 @@ public class GraphHopperTest
         GHPoint third = new GHPoint(11.2, 51.9);
         GHResponse rsp12 = instance.route(new GHRequest().addPoint(first).addPoint(second));
         assertFalse("should find 1->2", rsp12.hasErrors());
-        assertEquals(147930.5, rsp12.getFirst().getDistance(), .1);
+        assertEquals(147930.5, rsp12.getDistance(), .1);
         GHResponse rsp23 = instance.route(new GHRequest().addPoint(second).addPoint(third));
         assertFalse("should find 2->3", rsp23.hasErrors());
-        assertEquals(176608.9, rsp23.getFirst().getDistance(), .1);
+        assertEquals(176608.9, rsp23.getDistance(), .1);
 
-        GHResponse grsp = instance.route(new GHRequest().addPoint(first).addPoint(second).addPoint(third));
-        assertFalse("should find 1->2->3", grsp.hasErrors());
-        AltResponse rsp = grsp.getFirst();
-        assertEquals(rsp12.getFirst().getDistance() + rsp23.getFirst().getDistance(), rsp.getDistance(), 1e-6);
+        GHResponse rsp = instance.route(new GHRequest().addPoint(first).addPoint(second).addPoint(third));
+
+        assertFalse(rsp.hasErrors());
+        assertFalse("should find 1->2->3", rsp.hasErrors());
+        assertEquals(rsp12.getDistance() + rsp23.getDistance(), rsp.getDistance(), 1e-6);
         assertEquals(5, rsp.getPoints().getSize());
         assertEquals(5, rsp.getInstructions().size());
         assertEquals(Instruction.REACHED_VIA, rsp.getInstructions().get(1).getSign());
@@ -627,8 +624,7 @@ public class GraphHopperTest
         // Test enforce south start direction; expected nodes (9)-5-8-3-(10)
         GHRequest req = new GHRequest().addPoint(start, 180.).addPoint(end);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());        
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             9, 5, 8, 3, 10
@@ -649,8 +645,7 @@ public class GraphHopperTest
         // Test enforce south start direction and east end direction ; expected nodes (9)-5-8-1-2-(10)
         GHRequest req = new GHRequest().addPoint(start, 180.).addPoint(end, 90.);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());        
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             9, 5, 8, 1, 2, 10
@@ -659,8 +654,7 @@ public class GraphHopperTest
         // Test uni-directional case
         req.setAlgorithm(AlgorithmOptions.DIJKSTRA);
         response = new GHResponse();
-        paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());
+        paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             9, 5, 8, 1, 2, 10
@@ -681,8 +675,7 @@ public class GraphHopperTest
 
         GHRequest req = new GHRequest().addPoint(start).addPoint(via, 0.).addPoint(end);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             10, 5, 6, 7, 11
@@ -704,9 +697,7 @@ public class GraphHopperTest
         GHRequest req = new GHRequest().addPoint(start).addPoint(via).addPoint(end);
         req.getHints().put("pass_through", true);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());
-        assertEquals(1, response.getAlternatives().size());        
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             10, 4, 3, 11
@@ -732,8 +723,7 @@ public class GraphHopperTest
         GHRequest req = new GHRequest().addPoint(start, 0.).addPoint(via, 3.14 / 2).addPoint(end);
         req.getHints().put("pass_through", true);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             10, 4, 3, 8, 7, 9
@@ -757,8 +747,7 @@ public class GraphHopperTest
 
         GHRequest req = new GHRequest().addPoint(start, 90.).addPoint(via, 270.).addPoint(end, 270.);
         GHResponse response = new GHResponse();
-        List<Path> paths = instance.calcPaths(req, response);
-        assertFalse(response.hasErrors());
+        List<Path> paths = instance.getPaths(req, response);
         assertArrayEquals(new int[]
         {
             0, 1, 2
@@ -811,7 +800,7 @@ public class GraphHopperTest
         GraphHopper tmp = new GraphHopper().
                 putAlgorithmFactory(weighting, null).
                 setCHEnable(withCH).
-                setCHWeightings(Arrays.asList("shortest")).
+                setCHWeighting("fastest").
                 setEncodingManager(encodingManager);
         tmp.setGraphHopperStorage(g);
         tmp.postProcessing();
@@ -836,7 +825,7 @@ public class GraphHopperTest
 
         assertTrue(af == instance.getAlgorithmFactory(weighting));
 
-        // test that hints are passed to algorithm opts
+        // test that hints are passwed to algorithm opts
         final AtomicInteger cnt = new AtomicInteger(0);
         instance.putAlgorithmFactory(weighting, new RoutingAlgorithmFactorySimple()
         {
@@ -878,7 +867,7 @@ public class GraphHopperTest
                 PrepareContractionHierarchies pch = (PrepareContractionHierarchies) raf;
                 assertTrue("Preparation wasn't run! [" + threadCount + "]", pch.isPrepared());
 
-                String name = AbstractWeighting.weightingToFileName(pch.getWeighting());
+                String name = CHGraphImpl.weightingToFileName(pch.getWeighting());
                 Integer singleThreadShortcutCount = shortcutCountMap.get(name);
                 if (singleThreadShortcutCount == null)
                     shortcutCountMap.put(name, pch.getShortcuts());
@@ -895,49 +884,5 @@ public class GraphHopperTest
             }
             tmpGH.close();
         }
-    }
-
-    class TestEncoder extends CarFlagEncoder
-    {
-        private final String name;
-
-        public TestEncoder( String name )
-        {
-            this.name = name;
-        }
-
-        @Override
-        public String toString()
-        {
-            return name;
-        }
-    }
-
-    @Test
-    public void testGetWeightingForCH()
-    {
-        GraphHopper hopper = new GraphHopper();
-        TestEncoder truck = new TestEncoder("truck");
-        TestEncoder sTruck = new TestEncoder("simple_truck");
-
-        // use simple truck first
-        new EncodingManager(sTruck, truck);
-        hopper.putAlgorithmFactory(new FastestWeighting(sTruck), new RoutingAlgorithmFactorySimple());
-        hopper.putAlgorithmFactory(new FastestWeighting(truck), new RoutingAlgorithmFactorySimple());
-
-        assertEquals("fastest|truck", hopper.getWeightingForCH(new WeightingMap("fastest"), truck).toString());
-        assertEquals("fastest|simple_truck", hopper.getWeightingForCH(new WeightingMap("fastest"), sTruck).toString());
-    }
-
-    @Test
-    public void testGetMultipleWeightingsForCH()
-    {
-        EncodingManager em = new EncodingManager(Arrays.asList(new CarFlagEncoder()), 8);
-
-        GraphHopper tmpGH = new GraphHopper().setStoreOnFlush(false).
-                setEncodingManager(em).
-                setCHWeightings("fastest", "shortest");
-
-        assertEquals(2, tmpGH.getCHWeightings().size());
     }
 }

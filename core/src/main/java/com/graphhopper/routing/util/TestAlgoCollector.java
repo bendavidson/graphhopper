@@ -17,7 +17,7 @@
  */
 package com.graphhopper.routing.util;
 
-import com.graphhopper.AltResponse;
+import com.graphhopper.GHResponse;
 import com.graphhopper.routing.*;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.CHGraph;
@@ -49,7 +49,7 @@ public class TestAlgoCollector
     public TestAlgoCollector assertDistance( AlgoHelperEntry algoEntry, List<QueryResult> queryList,
                                              OneRun oneRun )
     {
-        List<Path> altPaths = new ArrayList<Path>();
+        List<Path> viaPaths = new ArrayList<Path>();
         QueryGraph queryGraph = new QueryGraph(algoEntry.getQueryGraph());
         queryGraph.lookup(queryList);
         AlgorithmOptions opts = algoEntry.opts;
@@ -62,15 +62,15 @@ public class TestAlgoCollector
             Path path = algoEntry.createAlgo(queryGraph).
                     calcPath(queryList.get(i).getClosestNode(), queryList.get(i + 1).getClosestNode());
             // System.out.println(path.calcInstructions().createGPX("temp", 0, "GMT"));
-            altPaths.add(path);
+            viaPaths.add(path);
         }
 
         PathMerger pathMerger = new PathMerger().
                 setCalcPoints(true).
                 setSimplifyResponse(false).
                 setEnableInstructions(true);
-        AltResponse rsp = new AltResponse();
-        pathMerger.doWork(rsp, altPaths, trMap.getWithFallBack(Locale.US));
+        GHResponse rsp = new GHResponse();
+        pathMerger.doWork(rsp, viaPaths, trMap.getWithFallBack(Locale.US));
 
         if (rsp.hasErrors())
         {

@@ -24,8 +24,6 @@ import com.graphhopper.storage.NodeAccess;
 import com.graphhopper.util.EdgeExplorer;
 import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.EdgeIteratorState;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Peter Karich
@@ -114,12 +112,6 @@ public abstract class AbstractRoutingAlgorithm implements RoutingAlgorithm
     protected abstract Path extractPath();
 
     protected abstract boolean isWeightLimitExceeded();
-
-    @Override
-    public List<Path> calcPaths( int from, int to )
-    {
-        return Collections.singletonList(calcPath(from, to));
-    }
 
     protected Path createEmptyPath()
     {

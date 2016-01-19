@@ -77,7 +77,7 @@ public class PMap
 
     public PMap remove( String key )
     {
-        map.remove(key.toLowerCase());
+        map.remove(key);
         return this;
     }
 

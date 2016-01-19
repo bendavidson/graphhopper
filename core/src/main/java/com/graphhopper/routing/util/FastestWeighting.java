@@ -27,21 +27,25 @@ import com.graphhopper.util.PMap;
  *
  * @author Peter Karich
  */
-public class FastestWeighting extends AbstractWeighting
+public class FastestWeighting implements Weighting
 {
     /**
-     * Converting to seconds is not necessary but makes adding other penalties easier (e.g. turn
+     * Converting to seconds is not necessary but makes adding other penalities easier (e.g. turn
      * costs or traffic light costs etc)
      */
     protected final static double SPEED_CONV = 3.6;
     final static double DEFAULT_HEADING_PENALTY = 300; //[s]
-    private final double headingPenalty;
+    private final double heading_penalty;
+    protected final FlagEncoder flagEncoder;
     private final double maxSpeed;
 
     public FastestWeighting( FlagEncoder encoder, PMap pMap )
     {
-        super(encoder);
-        headingPenalty = pMap.getDouble("heading_penalty", DEFAULT_HEADING_PENALTY);
+        if (!encoder.isRegistered())
+            throw new IllegalStateException("Make sure you add the FlagEncoder " + encoder + " to an EncodingManager before using it elsewhere");
+
+        this.flagEncoder = encoder;
+        heading_penalty = pMap.getDouble("heading_penalty", DEFAULT_HEADING_PENALTY);
         maxSpeed = encoder.getMaxSpeed() / SPEED_CONV;
     }
 
@@ -68,14 +72,39 @@ public class FastestWeighting extends AbstractWeighting
         // add direction penalties at start/stop/via points
         boolean penalizeEdge = edge.getBoolean(EdgeIteratorState.K_UNFAVORED_EDGE, reverse, false);
         if (penalizeEdge)
-            time += headingPenalty;
+            time += heading_penalty;
 
         return time;
     }
 
     @Override
-    public String getName()
+    public FlagEncoder getFlagEncoder()
     {
-        return "fastest";
+        return flagEncoder;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 71 * hash + toString().hashCode();
+        return hash;
+    }
+
+    @Override
+    public boolean equals( Object obj )
+    {
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final FastestWeighting other = (FastestWeighting) obj;
+        return toString().equals(other.toString());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "FASTEST|" + flagEncoder;
     }
 }

@@ -142,7 +142,7 @@ public class HeightTile
         int height = width;
         BufferedImage argbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics g = argbImage.getGraphics();
-        long len = width * width;
+        long len = heights.getCapacity() / 2;
         for (int i = 0; i < len; i++)
         {
             int lonSimilar = i % width;

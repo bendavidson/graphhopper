@@ -63,6 +63,7 @@ public class DAType
 
     }
 
+    ;
     private final MemRef memRef;
     private final boolean storing;
     private final boolean integ;

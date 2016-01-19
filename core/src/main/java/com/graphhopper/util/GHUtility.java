@@ -542,12 +542,4 @@ public class GHUtility
     {
         return edgeKey % 2 == 0 ? edgeKey + 1 : edgeKey - 1;
     }
-
-    /**
-     * @return edge ID for edgeKey
-     */
-    public static int getEdgeFromEdgeKey( int edgeKey )
-    {
-        return edgeKey / 2;
-    }
 }

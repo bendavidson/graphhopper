@@ -27,7 +27,6 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,7 +41,6 @@ import java.util.List;
 public class Path
 {
     private static final AngleCalc ac = new AngleCalc();
-    private List<String> description;
     protected Graph graph;
     private FlagEncoder encoder;
     protected double distance;
@@ -78,23 +76,6 @@ public class Path
         edgeEntry = p.edgeEntry;
     }
 
-    /**
-     * @return the description of this route alternative to make it meaningful for the user e.g. it
-     * displays one or two main roads of the route.
-     */
-    public List<String> getDescription()
-    {
-        if (description == null)
-            return Collections.emptyList();
-        return description;
-    }
-
-    public Path setDescription( List<String> description )
-    {
-        this.description = description;
-        return this;
-    }
-
     public Path setEdgeEntry( EdgeEntry edgeEntry )
     {
         this.edgeEntry = edgeEntry;
@@ -113,7 +94,7 @@ public class Path
     }
 
     /**
-     * We need to remember fromNode explicitly as its not saved in one edgeId of edgeIds.
+     * We need to remember fromNode explicitely as its not saved in one edgeId of edgeIds.
      */
     protected Path setFromNode( int from )
     {
@@ -513,7 +494,7 @@ public class Path
                             ways.add(prevInstruction);
                         }
 
-                        // Add passed exits to instruction. A node is counted if there is at least one outgoing edge
+                        // Add passed exits to instruction. A node is countet if there is at least one outgoing edge
                         // out of the roundabout
                         EdgeIterator edgeIter = outEdgeExplorer.setBaseNode(adjNode);
                         while (edgeIter.next())

@@ -85,22 +85,12 @@ public abstract class AbstractGraphStorageTester
     }
 
     @Test
-    public void testSetTooBigDistance_435()
+    public void testInfinityWeight()
     {
         graph = createGHStorage();
-
-        double maxDist = EdgeAccess.MAX_DIST;
-        EdgeIteratorState edge1 = graph.edge(0, 1, maxDist, true);
-        assertEquals(maxDist, edge1.getDistance(), 1);
-
-        // max out should NOT lead to infinity as this leads fast to NaN!
-        try
-        {
-            graph.edge(0, 2, maxDist + 1, true);
-        } catch (Exception ex)
-        {
-            assertTrue(ex.getMessage(), ex.getMessage().startsWith("Distance too large"));
-        }
+        EdgeIteratorState edge = graph.edge(0, 1);
+        edge.setDistance(Double.POSITIVE_INFINITY);
+        assertTrue(Double.isInfinite(edge.getDistance()));
     }
 
     @Test

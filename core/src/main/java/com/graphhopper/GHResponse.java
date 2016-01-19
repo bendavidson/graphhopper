@@ -17,7 +17,10 @@
  */
 package com.graphhopper;
 
+import com.graphhopper.util.InstructionList;
 import com.graphhopper.util.PMap;
+import com.graphhopper.util.PointList;
+import com.graphhopper.util.shapes.BBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,138 +34,228 @@ public class GHResponse
 {
     private String debugInfo = "";
     private final List<Throwable> errors = new ArrayList<Throwable>(4);
+    private PointList list = PointList.EMPTY;
+    private double distance;
+    private double ascend;
+    private double descend;
+    private double routeWeight;
+    private long time;
+    private InstructionList instructions;
     private final PMap hintsMap = new PMap();
-    private final List<AltResponse> alternatives = new ArrayList<AltResponse>(5);
 
     public GHResponse()
     {
     }
 
-    public void addAlternative( AltResponse altResponse )
-    {
-        alternatives.add(altResponse);
-    }
-
-    /**
-     * Returns the first response.
-     */
-    public AltResponse getFirst()
-    {
-        if (alternatives.isEmpty())
-            throw new RuntimeException("Cannot fetch first alternative if list is empty");
-
-        return alternatives.get(0);
-    }
-
-    public List<AltResponse> getAlternatives()
-    {
-        return alternatives;
-    }
-
-    public boolean hasAlternatives()
-    {
-        return !alternatives.isEmpty();
-    }
-
-    public void addDebugInfo( String debugInfo )
-    {
-        if (debugInfo == null)
-            throw new IllegalStateException("Debug information has to be none null");
-
-        if (!this.debugInfo.isEmpty())
-            this.debugInfo += ";";
-
-        this.debugInfo += debugInfo;
-    }
-
     public String getDebugInfo()
     {
-        String str = debugInfo;
-        for (AltResponse ar : alternatives)
-        {
-            if (!str.isEmpty())
-                str += "; ";
+        check("getDebugInfo");
+        return debugInfo;
+    }
 
-            str += ar.getDebugInfo();
+    public GHResponse setDebugInfo( String debugInfo )
+    {
+        if (debugInfo != null)
+            this.debugInfo = debugInfo;
+        return this;
+    }
+
+    private void check( String method )
+    {
+        if (hasErrors())
+        {
+            throw new RuntimeException("You cannot call " + method + " if response contains errors. Check this with ghResponse.hasErrors(). "
+                    + "Errors are: " + getErrors());
         }
-        return str;
     }
 
     /**
-     * This method returns true only if the response itself is errornous.
-     * <p/>
-     * @see #hasErrors()
+     * @return true if one or more error found
      */
-    public boolean hasRawErrors()
+    public boolean hasErrors()
     {
         return !errors.isEmpty();
     }
 
-    /**
-     * This method returns true if no alternative is available, if one of these has an error or if
-     * the response itself is errornous.
-     * <p/>
-     * @see #hasRawErrors()
-     */
-    public boolean hasErrors()
+    public List<Throwable> getErrors()
     {
-        if (hasRawErrors() || alternatives.isEmpty())
-            return true;
+        return errors;
+    }
 
-        for (AltResponse ar : alternatives)
-        {
-            if (ar.hasErrors())
-                return true;
-        }
+    @SuppressWarnings("unchecked")
+    public GHResponse addError( Throwable error )
+    {
+        errors.add(error);
+        return this;
+    }
 
-        return false;
+    public GHResponse setPoints( PointList points )
+    {
+        list = points;
+        return this;
     }
 
     /**
-     * This method returns all the explicitely added errors and the errors of all alternatives.
+     * This method returns all points on the path. Keep in mind that calculating the distance from
+     * these point might yield different results compared to getDistance as points could have been
+     * simplified on import or after querying.
      */
-    public List<Throwable> getErrors()
+    public PointList getPoints()
     {
-        List<Throwable> list = new ArrayList<Throwable>();
-        list.addAll(errors);
-        if (alternatives.isEmpty())
-            list.add(new IllegalStateException("No alternative existent"));
-        else
-            for (AltResponse ar : alternatives)
-            {
-                list.addAll(ar.getErrors());
-            }
+        check("getPoints");
         return list;
     }
 
-    public GHResponse addErrors( List<Throwable> errors )
+    public GHResponse setDistance( double distance )
     {
-        this.errors.addAll(errors);
+        this.distance = distance;
         return this;
     }
 
-    public GHResponse addError( Throwable error )
+    /**
+     * This method returns the distance of the path. Always prefer this method over
+     * getPoints().calcDistance
+     * <p>
+     * @return distance in meter
+     */
+    public double getDistance()
     {
-        this.errors.add(error);
+        check("getDistance");
+        return distance;
+    }
+
+    public GHResponse setAscend( double ascend )
+    {
+        if (ascend < 0)
+            throw new IllegalArgumentException("ascend has to be strictly positive");
+
+        this.ascend = ascend;
         return this;
+    }
+
+    /**
+     * This method returns the total elevation change (going upwards) in meter.
+     * <p>
+     * @return ascend in meter
+     */
+    public double getAscend()
+    {
+        return ascend;
+    }
+
+    public GHResponse setDescend( double descend )
+    {
+        if (descend < 0)
+            throw new IllegalArgumentException("descend has to be strictly positive");
+
+        this.descend = descend;
+        return this;
+    }
+
+    /**
+     * This method returns the total elevation change (going downwards) in meter.
+     * <p>
+     * @return decline in meter
+     */
+    public double getDescend()
+    {
+        return descend;
+    }
+
+    public GHResponse setTime( long timeInMillis )
+    {
+        this.time = timeInMillis;
+        return this;
+    }
+
+    /**
+     * @return time in millis
+     * @deprecated use getTime instead
+     */
+    public long getMillis()
+    {
+        check("getMillis");
+        return time;
+    }
+
+    /**
+     * @return time in millis
+     */
+    public long getTime()
+    {
+        check("getTimes");
+        return time;
+    }
+
+    public GHResponse setRouteWeight( double weight )
+    {
+        this.routeWeight = weight;
+        return this;
+    }
+
+    /**
+     * This method returns a double value which is better than the time for comparison of routes but
+     * only if you know what you are doing, e.g. only to compare routes gained with the same query
+     * parameters like vehicle.
+     */
+    public double getRouteWeight()
+    {
+        check("getRouteWeight");
+        return routeWeight;
+    }
+
+    /**
+     * Calculates the bounding box of this route response
+     */
+    public BBox calcRouteBBox( BBox _fallback )
+    {
+        check("calcRouteBBox");
+        BBox bounds = BBox.createInverse(_fallback.hasElevation());
+        int len = list.getSize();
+        if (len == 0)
+            return _fallback;
+
+        for (int i = 0; i < len; i++)
+        {
+            double lat = list.getLatitude(i);
+            double lon = list.getLongitude(i);
+            if (bounds.hasElevation())
+            {
+                double ele = list.getEle(i);
+                bounds.update(lat, lon, ele);
+            } else
+            {
+                bounds.update(lat, lon);
+            }
+        }
+        return bounds;
     }
 
     @Override
     public String toString()
     {
-        String str = "";
-        for (AltResponse a : alternatives)
-        {
-            str += "; " + a.toString();
-        }
+        String str = "nodes:" + list.getSize() + "; " + list.toString();
+        if (instructions != null && !instructions.isEmpty())
+            str += ", " + instructions.toString();
 
-        if (alternatives.isEmpty())
-            str = "no alternatives";
-
-        if (!errors.isEmpty())
-            str += ", main errors: " + errors.toString();
+        if (hasErrors())
+            str += ", " + errors.toString();
 
         return str;
+    }
+
+    public void setInstructions( InstructionList instructions )
+    {
+        this.instructions = instructions;
+    }
+
+    public InstructionList getInstructions()
+    {
+        check("getInstructions");
+        if (instructions == null)
+            throw new IllegalArgumentException("To access instructions you need to enable creation before routing");
+
+        return instructions;
     }
 
     public PMap getHints()

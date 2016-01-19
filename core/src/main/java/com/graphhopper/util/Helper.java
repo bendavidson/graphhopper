@@ -124,7 +124,7 @@ public class Helper
 
                 String field = line.substring(0, index);
                 String value = line.substring(index + 1);
-                map.put(field.trim(), value.trim());
+                map.put(field, value);
             }
         } finally
         {
@@ -508,22 +508,5 @@ public class Helper
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         return df;
-    }
-
-    /**
-     * This method handles the specified (potentially negative) int as unsigned bit representation
-     * and returns the positive converted long.
-     */
-    public static final long toUnsignedLong( int x )
-    {
-        return ((long) x) & 0xFFFFffffL;
-    }
-
-    /**
-     * Converts the specified long back into a signed int (reverse method for toUnsignedLong)
-     */
-    public static final int toSignedInt( long x )
-    {
-        return (int) x;
     }
 }

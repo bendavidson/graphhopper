@@ -22,8 +22,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 
 /**
- * This class currently parses the duration tag only.
- * <p/>
+ *
  * @author ratrun
  */
 public class OSMTagParser
@@ -44,7 +43,7 @@ public class OSMTagParser
         // Check for ISO_8601 format
         if (str.startsWith("P"))
         {
-            // A common mistake is when the minutes format is intended but the month format is specified 
+                // A common mistake is the the minutes format is intended but month format specified 
             // e.g. one month "P1M" is set, but on minute "PT1M" is meant.
             Duration dur;
             try

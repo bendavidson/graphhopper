@@ -1,22 +1,11 @@
 package com.graphhopper;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import junit.framework.TestCase;
 
-public class GHResponseTest
+public class GHResponseTest extends TestCase
 {
-    @Test
     public void testToString() throws Exception
     {
-        assertEquals("no alternatives", new GHResponse().toString());
-    }
-
-    @Test
-    public void testHasError() throws Exception
-    {
-        assertTrue(new GHResponse().hasErrors());
-        GHResponse rsp = new GHResponse();
-        rsp.addAlternative(new AltResponse());
-        assertFalse(rsp.hasErrors());
+        assertEquals("nodes:0; ", new GHResponse().toString());
     }
 }

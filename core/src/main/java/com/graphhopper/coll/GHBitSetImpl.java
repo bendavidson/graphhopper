@@ -63,12 +63,6 @@ public class GHBitSetImpl extends BitSet implements GHBitSet
     }
 
     @Override
-    public void remove( int index )
-    {
-        super.clear(index);
-    }
-
-    @Override
     public final GHBitSet copyTo( GHBitSet bs )
     {
         bs.clear();
@@ -79,7 +73,7 @@ public class GHBitSetImpl extends BitSet implements GHBitSet
         {
             int len = size();
             for (int index = super.nextSetBit(0); index >= 0;
-                    index = super.nextSetBit(index + 1))
+                 index = super.nextSetBit(index + 1))
             {
                 bs.add(index);
             }

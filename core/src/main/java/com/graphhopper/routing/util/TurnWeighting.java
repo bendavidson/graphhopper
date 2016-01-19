@@ -103,15 +103,8 @@ public class TurnWeighting implements Weighting
     }
 
     @Override
-    public boolean matches( String weightingAsStr, FlagEncoder encoder )
+    public String toString()
     {
-        // TODO without 'turn' in comparison
-        return superWeighting.matches(weightingAsStr, encoder);
-    }
-
-    @Override
-    public String getName()
-    {
-        return "turn|" + superWeighting.getName();
+        return "TURN|" + superWeighting.toString();
     }
 }

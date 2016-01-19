@@ -813,19 +813,10 @@ public class OSMReader implements DataReader
             towerNodeDistance = 0.0001;
         }
 
-        double maxDistance = (Integer.MAX_VALUE - 1) / 1000d;
-        if (Double.isNaN(towerNodeDistance))
+        if (Double.isInfinite(towerNodeDistance) || Double.isNaN(towerNodeDistance))
         {
             logger.warn("Bug in OSM or GraphHopper. Illegal tower node distance " + towerNodeDistance + " reset to 1m, osm way " + wayOsmId);
             towerNodeDistance = 1;
-        }
-
-        if (Double.isInfinite(towerNodeDistance) || towerNodeDistance > maxDistance)
-        {
-            // Too large is very rare and often the wrong tagging. See #435 
-            // so we can avoid the complexity of splitting the way for now (new towernodes would be required, splitting up geometry etc)
-            logger.warn("Bug in OSM or GraphHopper. Too big tower node distance " + towerNodeDistance + " reset to large value, osm way " + wayOsmId);
-            towerNodeDistance = maxDistance;
         }
 
         EdgeIteratorState iter = graph.edge(fromIndex, toIndex).setDistance(towerNodeDistance).setFlags(flags);

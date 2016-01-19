@@ -20,6 +20,7 @@ package com.graphhopper.storage;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.Weighting;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * For now this is just a helper class to quickly create a GraphStorage.
@@ -95,7 +96,7 @@ public class GraphBuilder
 
     /**
      * Default graph is a GraphStorage with an in memory directory and disabled storing on flush.
-     * Afterwards you'll need to call GraphStorage. Create to have a usable object. Better use
+     * Afterwards you'll need to call GraphStorage.create to have a useable object. Better use
      * create.
      */
     public GraphHopperStorage build()

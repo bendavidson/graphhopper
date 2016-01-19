@@ -15,9 +15,6 @@ The core product includes the following software
 tools
  * apache-compress
 
-tools-lgpl
- * tools from OpenTripPlanner licensed under LGPL
-
 web
  * org.json, MIT style license
  * com.google.inject, Apache License 2.0

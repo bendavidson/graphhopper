@@ -17,7 +17,6 @@
  */
 package com.graphhopper.tools;
 
-import com.graphhopper.AltResponse;
 import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
@@ -345,10 +344,10 @@ public class Measurement
                 // req.getHints().put(algo + ".approximation", "BeelineSimplification");
                 // req.getHints().put(algo + ".epsilon", 2);
                 req.getHints().put("instructions", withInstructions);
-                GHResponse rsp;
+                GHResponse res;
                 try
                 {
-                    rsp = hopper.route(req);
+                    res = hopper.route(req);
                 } catch (Exception ex)
                 {
                     // 'not found' can happen if import creates more than one subnetwork
@@ -356,22 +355,21 @@ public class Measurement
                             + "nodes:" + from + " -> " + to + ", request:" + req, ex);
                 }
 
-                if (rsp.hasErrors())
+                if (res.hasErrors())
                 {
                     if (!warmup)
                         failedCount.incrementAndGet();
 
-                    if (!rsp.getErrors().get(0).getMessage().toLowerCase().contains("not found"))
-                        logger.error("errors should NOT happen in Measurement! " + req + " => " + rsp.getErrors());
+                    if (!res.getErrors().get(0).getMessage().toLowerCase().contains("not found"))
+                        logger.error("errors should NOT happen in Measurement! " + req + " => " + res.getErrors());
 
                     return 0;
                 }
 
-                AltResponse arsp = rsp.getFirst();
                 if (!warmup)
                 {
-                    visitedNodesSum.addAndGet(rsp.getHints().getLong("visited_nodes.sum", 0));
-                    long dist = (long) arsp.getDistance();
+                    visitedNodesSum.addAndGet(res.getHints().getLong("visited_nodes.sum", 0));
+                    long dist = (long) res.getDistance();
                     distSum.addAndGet(dist);
 
                     airDistSum.addAndGet((long) distCalc.calcDist(fromLat, fromLon, toLat, toLon));
@@ -388,7 +386,7 @@ public class Measurement
 //                    calcPointsTimeSum.addAndGet(System.nanoTime() - start);
                 }
 
-                return arsp.getPoints().getSize();
+                return res.getPoints().getSize();
             }
         }.setIterations(count).start();
 

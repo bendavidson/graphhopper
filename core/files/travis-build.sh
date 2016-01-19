@@ -3,12 +3,6 @@ cd $HOME/../..
 
 mvn clean test verify
 
-cd $HOME/../../web
-
-sudo chown -R $USER ~/.npm
-npm install
-npm test && npm run lint
-
 #modules="core web tools"
 #for module in $modules; do
 #  echo "====== INSTALL $module ====="
