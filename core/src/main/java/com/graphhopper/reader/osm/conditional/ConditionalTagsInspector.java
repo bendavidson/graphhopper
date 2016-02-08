@@ -15,11 +15,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.graphhopper.reader.osm;
+package com.graphhopper.reader.osm.conditional;
 
 import com.graphhopper.reader.OSMWay;
-import com.graphhopper.reader.osm.conditional.ConditionalParser;
-import com.graphhopper.reader.osm.conditional.DateRange;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,6 @@ import java.util.Set;
  */
 public class ConditionalTagsInspector
 {
-
     private static final Logger logger = LoggerFactory.getLogger(ConditionalTagsInspector.class);
 
     private final Calendar calendar;
@@ -48,16 +46,20 @@ public class ConditionalTagsInspector
      */
     public ConditionalTagsInspector( List<String> tagsToCheck, Set<String> restrictiveValues, Set<String> permittedValues )
     {
-        this(Calendar.getInstance(), tagsToCheck, restrictiveValues, permittedValues);
+        this(DateRangeParser.createCalendar(), tagsToCheck, restrictiveValues, permittedValues);
     }
 
     /**
      * Create with given date
      */
-    public ConditionalTagsInspector( Calendar date, List<String> tagsToCheck, Set<String> restrictiveValues, Set<String> permittedValues )
+    public ConditionalTagsInspector( Calendar cal, List<String> tagsToCheck, Set<String> restrictiveValues, Set<String> permittedValues )
     {
-        this.calendar = date;
-        this.tagsToCheck = tagsToCheck;
+        this.calendar = cal;
+        this.tagsToCheck = new ArrayList(tagsToCheck.size());
+        for (String tagToCheck : tagsToCheck)
+        {
+            this.tagsToCheck.add(tagToCheck + ":conditional");
+        }
         this.restrictiveParser = new ConditionalParser(restrictiveValues, enabledLogs);
         this.permitParser = new ConditionalParser(permittedValues, enabledLogs);
     }
@@ -74,9 +76,9 @@ public class ConditionalTagsInspector
 
     protected boolean applies( OSMWay way, boolean checkPermissiveValues )
     {
-        for (String tagToCheck : tagsToCheck)
+        for (int index = 0; index < tagsToCheck.size(); index++)
         {
-            tagToCheck = tagToCheck + ":conditional";
+            String tagToCheck = tagsToCheck.get(index);
             String val = way.getTag(tagToCheck);
             if (val != null && !val.isEmpty())
             {
@@ -93,7 +95,7 @@ public class ConditionalTagsInspector
                 } catch (Exception e)
                 {
                     if (enabledLogs)
-                        logger.warn("Could not parse the conditional value:" + val + " of tag:" + tagToCheck + ". Exception:" + e.getMessage());
+                        logger.warn(way.getId() + " - could not parse the conditional value:" + val + " of tag:" + tagToCheck + ". Exception:" + e.getMessage());
                 }
             }
         }

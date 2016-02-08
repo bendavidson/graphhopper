@@ -17,7 +17,7 @@
  */
 package com.graphhopper.routing.util;
 
-import com.graphhopper.AltResponse;
+import com.graphhopper.PathWrapper;
 import com.graphhopper.routing.*;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.CHGraph;
@@ -59,8 +59,8 @@ public class TestAlgoCollector
 
         for (int i = 0; i < queryList.size() - 1; i++)
         {
-            Path path = algoEntry.createAlgo(queryGraph).
-                    calcPath(queryList.get(i).getClosestNode(), queryList.get(i + 1).getClosestNode());
+            RoutingAlgorithm algo = algoEntry.createAlgo(queryGraph);
+            Path path = algo.calcPath(queryList.get(i).getClosestNode(), queryList.get(i + 1).getClosestNode());
             // System.out.println(path.calcInstructions().createGPX("temp", 0, "GMT"));
             altPaths.add(path);
         }
@@ -69,7 +69,7 @@ public class TestAlgoCollector
                 setCalcPoints(true).
                 setSimplifyResponse(false).
                 setEnableInstructions(true);
-        AltResponse rsp = new AltResponse();
+        PathWrapper rsp = new PathWrapper();
         pathMerger.doWork(rsp, altPaths, trMap.getWithFallBack(Locale.US));
 
         if (rsp.hasErrors())
